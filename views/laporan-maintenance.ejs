@@ -1,0 +1,130 @@
+<%- include('partials/head', { page: 'laporan' }) %>
+<%
+const KATS = [['', 'Semua Sub Layanan'], ['kendaraan', 'Service / Perbaikan'], ['elektronik', 'Service Barang'], ['sarana', 'Perawatan Sarana']];
+%>
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('laporan') %>">← Kembali ke Laporan</a>
+  <a class="btn btn-ghost" href="<%- url('laporan/maintenance/excel') %>">⬇ Download Excel</a>
+  <form method="get" action="<%- url('laporan/maintenance') %>" class="report-filter">
+    <select name="status" aria-label="Filter status">
+      <option value="">Semua Status</option>
+      <option value="dilaporkan" <%- filter === 'dilaporkan' ? 'selected' : '' %>>Dilaporkan</option>
+      <option value="diperbaiki" <%- filter === 'diperbaiki' ? 'selected' : '' %>>Sedang Diperbaiki</option>
+      <option value="selesai" <%- filter === 'selesai' ? 'selected' : '' %>>Selesai</option>
+    </select>
+    <select name="kategori" aria-label="Filter sub layanan">
+      <% KATS.forEach(([v, l]) => { %>
+      <option value="<%= v %>" <%- kat === v ? 'selected' : '' %>><%= l %></option>
+      <% }) %>
+    </select>
+    <button type="submit" class="btn btn-ghost">Terapkan</button>
+    <a class="btn btn-ghost" href="<%- url('laporan/maintenance') %>">Reset</a>
+  </form>
+  <button type="button" class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Cetak / Simpan PDF
+  </button>
+  <a class="btn btn-ghost" href="<%- url('laporan/maintenance/excel') %>?<%- ['status='+filter, kat ? 'kategori='+kat : ''].filter(Boolean).join('&') %>">⬇ Download Excel</a>
+</div>
+
+<div class="print-header">
+  <% if (logoData) { %>
+  <img class="ph-logo ph-logo-img" src="<%- logoData %>" alt="Logo">
+  <% } else { %>
+  <svg class="ph-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path fill="#6366F1" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+    <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+    <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+    <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+    <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+  </svg>
+  <% } %>
+  <div class="ph-text">
+    <h2>PESANTREN SAHABATQU</h2>
+    <p>Sistem Inventaris, Peminjaman &amp; Pemeliharaan</p>
+    <h3>Laporan Pemeliharaan &amp; Perbaikan</h3>
+    <span class="ph-date">
+      Per <%= fmtDate(today()) %> · Dicetak <%= fmtDate(today()) %> oleh <%= u.nama %> (<%= roleLabel(u.role) %>) ·
+      Status: <%- filter ? statusLabel(filter, 'maintenance') : 'Semua' %> · Sub Layanan: <%- kat ? kategoriLabel(kat) : 'Semua' %>
+    </span>
+  </div>
+</div>
+
+<div class="stat-grid report-summary">
+  <div class="card stat">
+    <div class="stat-icon si-indigo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Total Laporan</span><strong class="stat-value"><%= sum.total %></strong></div>
+  </div>
+  <div class="card stat">
+    <div class="stat-icon si-gold">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Sedang Berjalan</span><strong class="stat-value"><%= sum.berjalan %></strong></div>
+  </div>
+  <div class="card stat">
+    <div class="stat-icon si-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Selesai</span><strong class="stat-value"><%= sum.selesai %></strong></div>
+  </div>
+  <div class="card stat">
+    <div class="stat-icon si-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Biaya Aktual</span><strong class="stat-value"><%= fmtIDR(sum.biaya) %></strong></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Daftar Laporan Pemeliharaan</h2>
+    <span class="cell-sub">Total estimasi: <strong><%= fmtIDR(sum.estimasi) %></strong> · Total biaya: <strong><%= fmtIDR(sum.biaya) %></strong></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>No</th><th>Objek</th><th>Judul Laporan</th><th>Tingkat</th><th>Status</th><th>Estimasi</th><th>Biaya</th><th>PIC</th><th>Tanggal</th></tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="9" class="empty-cell">Tidak ada laporan pada filter ini.</td></tr>
+        <% } %>
+        <% list.forEach((m, i) => { %>
+        <tr>
+          <td><%= i + 1 %></td>
+          <td>
+            <div class="cell-main"><%= m.objek_nama %></div>
+            <div class="cell-sub"><span class="kat kat-<%= m.kategori %>"><%= kategoriLabel(m.kategori) %></span></div>
+          </td>
+          <td>
+            <div class="cell-main"><%= m.judul %></div>
+            <div class="cell-sub">oleh <%= m.pelapor_nama %></div>
+          </td>
+          <td><span class="lvl lvl-<%= m.tingkat %>"><%= m.tingkat %></span></td>
+          <td><%- badge(m.status, 'maintenance') %></td>
+          <td class="nowrap"><%= fmtIDR(m.estimasi_biaya) %></td>
+          <td class="nowrap"><strong><%= fmtIDR(m.biaya_aktual) %></strong></td>
+          <td><%= m.penanggung_jawab || '—' %></td>
+          <td class="nowrap"><%= fmtDateShort(m.tanggal_lapor) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="signature print-only">
+  <div class="sig-block">
+    <p class="sig-role">Dicetak oleh,</p>
+    <p class="sig-name"><strong><%= u.nama %></strong></p>
+    <p class="sig-sub"><%= roleLabel(u.role) %> · Pesantren SahabatQu</p>
+  </div>
+  <div class="sig-block">
+    <p class="sig-role">Mengetahui,<br>Kepala Sarana &amp; Prasarana</p>
+    <p class="sig-name">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</p>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

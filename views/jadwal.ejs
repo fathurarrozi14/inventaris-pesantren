@@ -1,0 +1,103 @@
+<%- include('partials/head', { page: 'pemeliharaan/jadwal' }) %>
+<%
+const TABS = [['', 'Semua'], ['servis', 'Service / Perbaikan'], ['pajak_tahunan', 'Pajak Tahunan'], ['pajak_bulanan', 'Pajak 5 Tahunan']];
+%>
+<div class="toolbar">
+  <a class="btn btn-ghost" href="<%- url('pemeliharaan/jadwal/excel') %>">⬇ Excel (CSV)</a>
+  <a class="btn btn-ghost" href="<%- url('pemeliharaan/jadwal/cetak') %>">🖨 Cetak / PDF</a>
+  <form method="get" action="pemeliharaan/jadwal" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari kendaraan / keterangan...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+</div>
+
+<div class="tabs">
+  <% TABS.forEach(([v, l]) => { %>
+  <a class="<%- jn === v ? 'active' : '' %>" href="<%- url('pemeliharaan/jadwal') %><%- v ? '?jenis=' + v : '' %>"><%= l %></a>
+  <% }) %>
+</div>
+
+<div class="card form-card">
+  <div class="card-head">
+    <h2><%= edit ? 'Ubah Jadwal' : 'Tambah Jadwal' %></h2>
+    <% if (edit) { %><a class="link-more" href="<%- url('pemeliharaan/jadwal') %>">Batal ubah</a><% } %>
+  </div>
+  <form method="post" action="<%- url(edit ? 'pemeliharaan/jadwal/' + edit.id : 'pemeliharaan/jadwal') %>" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Kendaraan / Objek <i>*</i></label>
+      <input type="text" name="objek_nama" required value="<%- edit ? e(edit.objek_nama) : '' %>" placeholder="cth: Mobil Operasional N 1234 XYZ">
+    </div>
+    <div class="field">
+      <label>Jenis Jadwal <i>*</i> (bisa pilih lebih dari satu)</label>
+      <% const jenisEdit = edit ? (edit.jenis_list || edit.jenis).split(',').filter(Boolean) : ['servis']; %>
+      <div class="seg" style="flex-direction:column;align-items:flex-start">
+        <label class="seg-item"><input type="checkbox" name="jenis" value="servis" <%- jenisEdit.includes('servis') ? 'checked' : '' %>> Service / Perbaikan</label>
+        <label class="seg-item"><input type="checkbox" name="jenis" value="pajak_tahunan" <%- jenisEdit.includes('pajak_tahunan') ? 'checked' : '' %>> Pajak Tahunan</label>
+        <label class="seg-item"><input type="checkbox" name="jenis" value="pajak_bulanan" <%- jenisEdit.includes('pajak_bulanan') ? 'checked' : '' %>> Pajak 5 Tahunan</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Tanggal Jatuh Tempo <i>*</i> (pilih dari kalender)</label>
+      <input type="date" name="tanggal" required value="<%- edit ? e(edit.tanggal) : today() %>">
+      <p class="hint">Klik kotak tanggal untuk membuka kalender (pilih hari, bulan, tahun). Pengingat otomatis muncul di dashboard (H-30 s.d. terlambat) per unit kendaraan.</p>
+    </div>
+    <div class="field">
+      <label>Keterangan</label>
+      <input type="text" name="keterangan" value="<%- edit ? e(edit.keterangan) : '' %>" placeholder="cth: Ganti oli + filter">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn"><%= edit ? 'Simpan Perubahan' : 'Simpan Jadwal' %></button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Kendaraan / Objek</th><th>Jenis</th><th>Tanggal</th><th>Keterangan</th><th>Status</th><th class="th-actions">Aksi</th></tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="6" class="empty-cell">Belum ada jadwal pada filter ini.</td></tr>
+        <% } %>
+        <% list.forEach(j => { %>
+        <% const sisa = Math.round((Date.parse(j.tanggal) - Date.parse(today())) / 86400000); %>
+        <tr>
+          <td><div class="cell-main"><%= j.objek_nama %></div></td>
+          <td>
+            <% (j.jenis_list || j.jenis).split(',').filter(Boolean).forEach(x => { %>
+            <span class="kat kat-<%- x === 'pajak_tahunan' ? 'kendaraan' : (x === 'pajak_bulanan' ? 'elektronik' : 'sarana') %>" style="margin-right:4px"><%= jenisLabel[x] || x %></span>
+            <% }) %>
+          </td>
+          <td class="nowrap"><%= fmtDate(j.tanggal) %>
+            <br><span class="cell-sub">
+              <% if (j.status === 'selesai') { %>selesai<% if (j.tanggal_selesai) { %> <%= fmtDateShort(j.tanggal_selesai) %><% } %>
+              <% } else if (sisa < 0) { %>terlambat <%= Math.abs(sisa) %> hari
+              <% } else if (sisa === 0) { %>hari ini
+              <% } else { %>H-<%= sisa %><% } %>
+            </span></td>
+          <td><%= j.keterangan || '—' %></td>
+          <td><span class="badge badge-<%= j.status === 'selesai' ? 'green' : (sisa < 0 ? 'red' : 'amber') %>"><%= j.status === 'selesai' ? 'Selesai' : (sisa < 0 ? 'Terlambat' : 'Akan Datang') %></span></td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('pemeliharaan/jadwal/' + j.id + '/edit') %>">Edit</a>
+            <form method="post" action="<%- url('pemeliharaan/jadwal/' + j.id + '/selesai') %>" class="inline-form">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-ghost"><%= j.status === 'selesai' ? 'Aktifkan' : 'Tandai Selesai' %></button>
+            </form>
+            <form method="post" action="<%- url('pemeliharaan/jadwal/' + j.id + '/hapus') %>" class="inline-form" data-confirm="Hapus jadwal ini?">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

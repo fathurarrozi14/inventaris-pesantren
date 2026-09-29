@@ -1,0 +1,43 @@
+<%- include('partials/head', { page: 'piket' }) %>
+
+<div class="toolbar">
+  <a class="btn btn-ghost" href="<%- url('piket') %>">← Daftar Jadwal Piket</a>
+  <span class="tb-info">Edit jadwal piket</span>
+</div>
+
+<div class="card form-card">
+  <div class="card-head"><h2>Edit Jadwal Piket — <%= s.nama %></h2></div>
+  <form method="post" action="<%- url('piket/' + s.id) %>" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Nama Petugas <i>*</i></label>
+      <input type="text" name="nama" required value="<%- e(s.nama) %>">
+    </div>
+    <div class="field">
+      <label>Area <i>*</i></label>
+      <input type="text" name="area" required value="<%- e(s.area) %>">
+    </div>
+    <div class="field">
+      <label>Bulan <i>*</i> (pilih dari kalender)</label>
+      <input type="month" name="bulan" required value="<%- s.bulan %>">
+    </div>
+    <div class="field">
+      <label>Hari Libur</label>
+      <input type="text" name="hari_libur" value="<%- e(s.hari_libur) %>">
+    </div>
+    <div class="field">
+      <label>Kordinator Kebersihan</label>
+      <input type="text" name="kordinator_kebersihan" value="<%- e(s.kordinator_kebersihan || 'Ustadz Ahmad Syukri Rohman') %>">
+    </div>
+    <div class="field">
+      <label>Kordinator K3</label>
+      <input type="text" name="kordinator_k3" value="<%- e(s.kordinator_k3 || 'Ustadz Ahmad Shobirin') %>">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn">💾 Simpan Perubahan</button>
+      <a class="btn btn-ghost" href="<%- url('piket/' + s.id) %>">Batal</a>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Cek Kode Stiker — Pesantren SahabatQu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=18">
+<link rel="icon" type="image/png" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="icon" type="image/png" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<link rel="manifest" href="<%- url('manifest.webmanifest') %>">
+<meta name="theme-color" content="#4F46E5">
+<link rel="apple-touch-icon" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="apple-touch-icon" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SINTAPQU">
+<script src="<%- url('pwa.js?v=6') %>" defer></script>
+</head>
+<body class="login-body">
+<div class="bg" aria-hidden="true">
+  <div class="bg-pattern"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
+<div class="login-wrap" style="max-width:520px">
+  <div class="card barang-publik">
+    <h1 class="bp-nama" style="font-size:22px">Cek Barang dari Stiker</h1>
+    <p class="cell-sub" style="text-align:center;margin-bottom:16px">Scan barcode/QR stiker, atau ketik kode (cth: SBQ-00007) di sini.</p>
+    <form method="get" action="cek-barang" class="bp-scan">
+      <input type="text" name="kode" value="<%- e(kode) %>" placeholder="SBQ-xxxxx" autofocus>
+      <button type="submit" class="btn">Cek</button>
+    </form>
+    <% if (kode && !hasil) { %>
+    <p class="empty" style="margin-top:16px">Barang dengan kode <strong><%= e(kode) %></strong> tidak ditemukan.</p>
+    <% } %>
+    <% if (hasil) { %>
+    <div class="bp-foto" style="margin-top:18px">
+      <% if (hasil.foto) { %><img src="<%- e(hasil.foto) %>" alt="Foto" loading="lazy" decoding="async"><% } else { %>
+      <div class="bp-foto-empty"><p>Belum ada foto</p></div><% } %>
+    </div>
+    <h2 class="bp-nama"><%= e(hasil.nama) %></h2>
+    <div class="bp-kode"><span class="kat kat-elektronik">Barang</span></div>
+    <div class="bp-meta">
+      <div class="meta"><span>Kategori</span><strong><%= hasil.kategori || '—' %></strong></div>
+      <div class="meta"><span>Lokasi</span><strong><%= hasil.lokasi || '—' %></strong></div>
+      <div class="meta"><span>Golongan</span><strong><%= hasil.golongan || '—' %></strong></div>
+      <div class="meta"><span>Bidang</span><strong><%= hasil.bidang_aset || '—' %></strong></div>
+      <div class="meta"><span>Kode</span><strong><%= kodeAset(hasil.golongan, hasil.bidang_aset, hasil.kode_aset) || kodeStiker(hasil.id) %></strong></div>
+      <div class="meta"><span>Stok</span><strong><%= hasil.jumlah_tersedia %> / <%= hasil.jumlah_total %> <%= hasil.satuan %></strong></div>
+      <div class="meta"><span>Status</span><strong><%= hasil.jumlah_tersedia > 0 ? 'Tersedia' : 'Habis' %></strong></div>
+    </div>
+    <% if (hasil.deskripsi) { %><p class="bp-desc"><%= hasil.deskripsi %></p><% } %>
+    <% } %>
+    <div class="bp-actions">
+      <a class="btn" href=".">☰ Menu Utama</a>
+      <a class="btn btn-ghost" href="cek-barang">Cek Kode Lain</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

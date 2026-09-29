@@ -1,0 +1,100 @@
+<%- include('partials/head', { page: 'users' }) %>
+
+<div class="toolbar">
+  <form method="get" action="users" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari nama / username...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <div class="tabs">
+    <a class="<%- role === '' ? 'active' : '' %>" href="users">Semua Peran</a>
+    <a class="<%- role === 'admin' ? 'active' : '' %>" href="users?role=admin">Admin</a>
+    <a class="<%- role === 'operator' ? 'active' : '' %>" href="users?role=operator">Operator</a>
+    <a class="<%- role === 'santri' ? 'active' : '' %>" href="users?role=santri">Santri/Guru</a>
+  </div>
+  <button class="btn btn-ghost" id="toggleForm" type="button" data-add-label="+ Tambah Pengguna"><%= edit ? 'Tutup Formulir' : '+ Tambah Pengguna' %></button>
+</div>
+
+<div class="card form-card" id="userForm" <% if (!edit) { %>hidden<% } %>>
+  <div class="card-head">
+    <h2><%= edit ? 'Ubah Pengguna' : 'Tambah Pengguna Baru' %></h2>
+    <% if (edit) { %><a class="link-more" href="users">Batal ubah</a><% } %>
+  </div>
+  <form method="post" action="users" class="form-grid">
+    <%- csrfField %>
+    <input type="hidden" name="id" value="<%- edit ? edit.id : '' %>">
+    <div class="field">
+      <label>Username <i>*</i></label>
+      <input type="text" name="username" required value="<%- edit ? edit.username : '' %>" placeholder="cth: ustadz_farid">
+    </div>
+    <div class="field">
+      <label>Nama Lengkap <i>*</i></label>
+      <input type="text" name="nama" required value="<%- edit ? edit.nama : '' %>" placeholder="cth: Ustadz Farid">
+    </div>
+    <div class="field">
+      <label>Peran <i>*</i></label>
+      <select name="role">
+        <option value="admin" <%- edit && edit.role === 'admin' ? 'selected' : '' %>>Admin</option>
+        <option value="operator" <%- edit && edit.role === 'operator' ? 'selected' : '' %>>Operator</option>
+        <option value="santri" <%- !edit || edit.role === 'santri' ? 'selected' : '' %>>Santri / Guru</option>
+      </select>
+    </div>
+    <div class="field">
+      <label><%= edit ? 'Password Baru (kosongkan jika tidak diganti)' : 'Password <i>*</i>' %></label>
+      <input type="password" name="password" minlength="6" placeholder="minimal 6 karakter">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn"><%= edit ? 'Simpan Perubahan' : 'Tambah Pengguna' %></button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Username</th>
+          <th>Peran</th>
+          <th>Terdaftar</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% list.forEach(x => { %>
+        <tr>
+          <td>
+            <div class="user-cell">
+              <span class="avatar avatar-sm"><%= x.nama.charAt(0).toUpperCase() %></span>
+              <strong><%= x.nama %></strong>
+            </div>
+          </td>
+          <td>@<%= x.username %></td>
+          <td><span class="role-pill role-<%= x.role %>"><%= roleLabel(x.role) %></span></td>
+          <td class="nowrap"><%= fmtDateShort(x.created_at ? x.created_at.slice(0,10) : '') %></td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('users/' + x.id + '/log') %>">Log</a>
+            <% if (x.id !== u.id) { %>
+            <a class="btn btn-sm btn-ghost" href="users?edit=<%= x.id %>">Ubah</a>
+            <form method="post" action="users" class="inline-form" data-confirm="Reset password <%= x.nama %> menjadi sahabat123?">
+              <%- csrfField %><input type="hidden" name="id" value="<%= x.id %>">
+              <button type="submit" name="_aksi" value="reset_password" class="btn btn-sm btn-ghost">Reset Password</button>
+            </form>
+            <form method="post" action="users" class="inline-form" data-confirm="Hapus pengguna <%= x.nama %>?">
+              <%- csrfField %><input type="hidden" name="id" value="<%= x.id %>">
+              <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+            <% } else { %>
+            <span class="cell-sub">Akun Anda</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

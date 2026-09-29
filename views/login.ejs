@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Masuk — Pesantren SahabatQu</title>
+<% if (logoData) { %>
+<link rel="icon" href="<%- url('logo') %>">
+<% } else { %>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366F1'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z'/%3E%3Crect x='8' y='33' width='32' height='4' rx='2' fill='%238B5CF6'/%3E%3Crect x='4' y='38' width='40' height='5' rx='2.5' fill='%236366F1'/%3E%3Crect x='6' y='24' width='3' height='12' rx='1.5' fill='%23E8C46A'/%3E%3Crect x='39' y='24' width='3' height='12' rx='1.5' fill='%23E8C46A'/%3E%3C/svg%3E">
+<% } %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"></noscript>
+<script>
+/* Terapkan tema sebelum render untuk mencegah kedipan salah tema */
+(function () {
+  var s = null;
+  try { s = localStorage.getItem('sq-theme'); } catch (e) {}
+  var t = s || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<link rel="stylesheet" href="style.css?v=18">
+<link rel="icon" type="image/png" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="icon" type="image/png" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<link rel="manifest" href="<%- url('manifest.webmanifest') %>">
+<meta name="theme-color" content="#4F46E5">
+<link rel="apple-touch-icon" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="apple-touch-icon" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SINTAPQU">
+<script src="<%- url('pwa.js?v=6') %>" defer></script>
+</head>
+<body class="login-body">
+<div class="bg" aria-hidden="true">
+  <div class="bg-pattern"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+</div>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-arch" aria-hidden="true"></div>
+    <button type="button" class="theme-toggle login-theme-toggle" id="themeToggle" aria-label="Ganti tema terang/gelap" title="Ganti tema terang/gelap">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <a class="login-logo" href="." title="Ke halaman website" aria-label="Ke halaman website">
+      <% if (logoData) { %>
+      <img class="logo-img" src="<%- url('logo') %>" alt="Logo Pesantren">
+      <% } else { %>
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#A78BFA"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#lg)" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+        <rect x="8" y="33" width="32" height="4" rx="2" fill="#A78BFA"/>
+        <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#818CF8"/>
+        <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+        <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+      </svg>
+      <% } %>
+    </a>
+    <p class="bismillah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+    <h1>Pesantren SahabatQu</h1>
+    <p class="login-sub">Sistem Inventaris, Peminjaman &amp; Pemeliharaan</p>
+
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="auth-tab <%= mode === 'login' ? 'active' : '' %>" data-tab="login">Masuk</button>
+      <button type="button" class="auth-tab <%= mode === 'register' ? 'active' : '' %>" data-tab="register">Daftar Baru</button>
+    </div>
+
+    <% if (error) { %>
+    <div class="flash flash-danger login-error"><span>✕</span><%= error %></div>
+    <% } %>
+    <% if (regError) { %>
+    <div class="flash flash-danger login-error"><span>✕</span><%= regError %></div>
+    <% } %>
+
+    <form method="post" action="login" class="login-form" id="formLogin" <%= mode === 'register' ? 'hidden' : '' %>>
+      <%- csrfField %>
+      <% if (typeof next !== 'undefined' && next) { %><input type="hidden" name="next" value="<%- e(next) %>"><% } %>
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="cth: admin" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" data-target="password" aria-label="Lihat password">
+            <svg class="pw-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-block">Masuk ke Sistem</button>
+    </form>
+
+    <form method="post" action="register" class="login-form" id="formRegister" <%= mode === 'login' ? 'hidden' : '' %>>
+      <%- csrfField %>
+      <div class="field">
+        <label>Nama Lengkap <i>*</i></label>
+        <input type="text" name="nama" value="<%- e(regNama) %>" placeholder="cth: Ahmad Fauzi" required>
+      </div>
+      <div class="field">
+        <label>Username <i>*</i></label>
+        <input type="text" name="username" value="<%- e(regUsername) %>" placeholder="cth: ahmad_fauzi" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label>Password <i>*</i></label>
+        <div class="pw-wrap">
+          <input type="password" id="regPass0" name="password" placeholder="minimal 6 karakter" autocomplete="new-password" required minlength="6">
+          <button type="button" class="pw-toggle" data-target="regPass0" aria-label="Lihat password">
+            <svg class="pw-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Konfirmasi Password <i>*</i></label>
+        <div class="pw-wrap">
+          <input type="password" id="regPass1" name="password_konfirmasi" placeholder="ulangi password" autocomplete="new-password" required minlength="6">
+          <button type="button" class="pw-toggle" data-target="regPass1" aria-label="Lihat password">
+            <svg class="pw-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-block">Buat Akun Baru</button>
+      <p class="hint register-hint">Akun baru terdaftar sebagai <strong>Santri/Guru</strong>. Perubahan peran dilakukan oleh admin.</p>
+    </form>
+
+    <div class="login-foot">
+      <span class="divider-star">✦</span>
+      <p>© <%= new Date().getFullYear() %> Pesantren SahabatQu — Sarana &amp; Prasarana</p>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.auth-tab');
+  var loginForm = document.getElementById('formLogin');
+  var regForm = document.getElementById('formRegister');
+  function show(name) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-tab') === name); });
+    loginForm.hidden = name !== 'login';
+    regForm.hidden = name !== 'register';
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.getAttribute('data-tab')); }); });
+
+  // Ganti tema terang/gelap
+  var toggle = document.getElementById('themeToggle');
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('sq-theme', next); } catch (e) {}
+    });
+  }
+
+  // Lihat/sembunyikan password
+  document.querySelectorAll('.pw-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById(btn.getAttribute('data-target'));
+      if (!inp) return;
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.classList.toggle('on', show);
+    });
+  });
+})();
+</script>
+</body>
+</html>

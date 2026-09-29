@@ -1,0 +1,111 @@
+<%- include('partials/head', { page: 'arsip-surat' }) %>
+
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('arsip-surat') %>">← Kembali ke Arsip</a>
+  <a class="btn btn-ghost" href="<%- url('arsip-surat/' + surat.id + '/edit') %>">Edit Surat</a>
+  <button type="button" class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Cetak / Simpan PDF
+  </button>
+</div>
+
+<div class="surat-doc">
+  <div class="surat-kop">
+    <div class="surat-kop-logo">
+      <% if (logoData) { %><img class="logo-img" src="<%- logoData %>" alt="Logo"><% } else { %>
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path fill="#6366F1" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+        <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+        <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+        <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+        <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+      </svg>
+      <% } %>
+    </div>
+    <div class="surat-kop-text">
+      <h2>PESANTREN SAHABATQU</h2>
+      <p>Bagian Sarana &amp; Prasarana</p>
+      <% if (kop.alamat) { %><p><%= kop.alamat %></p><% } %>
+      <% if (kop.telepon || kop.email) { %><p><%= kop.telepon %><% if (kop.telepon && kop.email) { %> · <% } %><%= kop.email %></p><% } %>
+    </div>
+  </div>
+
+  <div class="surat-judul">
+    <h3>SURAT SERAH TERIMA BARANG / ASET</h3>
+    <p class="surat-nomor">Nomor: <%= surat.nomor || '—' %></p>
+  </div>
+
+  <p class="surat-par">Yang bertanda tangan di bawah ini:</p>
+  <table class="surat-pihak">
+    <tr>
+      <td class="surat-num"><strong>Pihak<br>Pertama</strong></td>
+      <td class="surat-pihak-col">
+        <span class="surat-nama"><%= surat.penyerah_nama || '—' %></span>
+        <span class="surat-jabatan"><%= surat.penyerah_jabatan %></span>
+        <span class="surat-role">(<strong>Penyerah</strong>)</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="surat-num"><strong>Pihak<br>Kedua</strong></td>
+      <td class="surat-pihak-col">
+        <span class="surat-nama"><%= surat.penerima_nama || '—' %></span>
+        <span class="surat-jabatan"><%= surat.penerima_jabatan %></span>
+        <span class="surat-role">(<strong>Penerima</strong>)</span>
+      </td>
+    </tr>
+  </table>
+
+  <p class="surat-par">
+    Pada hari ini, <strong><%= fmtDate(surat.tanggal) %></strong>, bertempat di <strong><%= surat.tempat || '—' %></strong>,
+    telah dilakukan serah terima barang/aset sebagai berikut:
+  </p>
+
+  <table class="surat-tabel">
+    <thead>
+      <tr><th>No</th><th>Nama Barang / Aset</th><th>Jumlah</th><th>Satuan</th><th>Keterangan</th></tr>
+    </thead>
+    <tbody>
+      <% if (items.length === 0) { %>
+      <tr><td colspan="5" style="text-align:center">— Tidak ada barang tercantum —</td></tr>
+      <% } %>
+      <% items.forEach((it, i) => { %>
+      <tr>
+        <td class="c"><%= i + 1 %></td>
+        <td><%= it.nama %></td>
+        <td class="c"><%= it.jumlah %></td>
+        <td class="c"><%= it.satuan %></td>
+        <td><%= it.keterangan || '—' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <% if (surat.catatan) { %>
+  <p class="surat-par"><strong>Catatan:</strong> <%= surat.catatan %></p>
+  <% } %>
+
+  <p class="surat-par">
+    Demikian surat serah terima ini dibuat dengan sebenar-benarnya untuk dipergunakan sebagaimana mestinya.
+  </p>
+
+  <div class="surat-ttd">
+    <div class="surat-ttd-blok">
+      <p><%= surat.tempat || '—' %>, <%= fmtDate(surat.tanggal) %></p>
+      <p>Pihak Pertama (Penyerah),</p>
+      <div class="surat-ttd-space"></div>
+      <p class="surat-ttd-nama"><strong><%= surat.penyerah_nama || '………………' %></strong></p>
+      <p class="surat-ttd-jabatan"><%= surat.penyerah_jabatan %></p>
+    </div>
+    <div class="surat-ttd-blok">
+      <p>&nbsp;</p>
+      <p>Pihak Kedua (Penerima),</p>
+      <div class="surat-ttd-space"></div>
+      <p class="surat-ttd-nama"><strong><%= surat.penerima_nama || '………………' %></strong></p>
+      <p class="surat-ttd-jabatan"><%= surat.penerima_jabatan %></p>
+    </div>
+  </div>
+
+  <p class="surat-foot">Dicetak <%= fmtDate(today()) %> oleh <%= u.nama %> · Sistem Inventaris Pesantren SahabatQu</p>
+</div>
+
+<%- include('partials/foot') %>

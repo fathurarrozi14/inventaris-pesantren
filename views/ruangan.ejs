@@ -1,0 +1,171 @@
+<%- include('partials/head', { page: 'ruangan' }) %>
+
+<div class="toolbar">
+  <form method="get" action="ruangan" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari nama / lokasi ruangan...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <% if (isManageStaff) { %>
+  <a class="btn btn-ghost" href="<%- url('ruangan/cetak') %>" title="Cetak / simpan sebagai PDF">🖨 Cetak / PDF</a>
+  <a class="btn btn-ghost" href="<%- url('ruangan/excel') %>" title="Download daftar ruangan (CSV)">⬇ Excel (CSV)</a>
+  <% } %>
+  <% if (isAdmin) { %>
+  <button class="btn btn-ghost" id="toggleForm" type="button" data-add-label="+ Tambah Ruangan"><%= edit ? 'Tutup Formulir' : '+ Tambah Ruangan' %></button>
+  <% } %>
+</div>
+
+<% if (isAdmin && (edit || true)) { %>
+<div class="card form-card" id="ruanganForm" <% if (!edit) { %>hidden<% } %>>
+  <div class="card-head">
+    <h2><%= edit ? 'Ubah Ruangan' : 'Tambah Ruangan Baru' %></h2>
+    <% if (edit) { %><a class="link-more" href="ruangan">Batal ubah</a><% } %>
+  </div>
+  <form method="post" action="ruangan" class="form-grid pk-form" data-kode-saatini="<%- edit ? e(edit.kode_aset) : '' %>">
+    <%- csrfField %>
+    <input type="hidden" name="id" value="<%- edit ? edit.id : '' %>">
+    <div class="field">
+      <label>Nama Ruangan <i>*</i></label>
+      <input type="text" name="nama" required value="<%- edit ? edit.nama : '' %>" placeholder="cth: Aula Serbaguna">
+    </div>
+    <div class="field">
+      <label>Lokasi</label>
+      <input type="text" name="lokasi" value="<%- edit ? edit.lokasi : '' %>" placeholder="cth: Gedung Serbaguna">
+    </div>
+    <div class="field">
+      <label>Kapasitas (orang)</label>
+      <input type="number" name="kapasitas" min="0" value="<%- edit ? edit.kapasitas : '' %>" placeholder="cth: 100">
+    </div>
+    <div class="field">
+      <label>Golongan</label>
+      <select name="golongan" id="golonganSelect" data-golongan>
+        <option value="">— Pilih —</option>
+        <% pengkodean.golongan.forEach(g => { %>
+        <option value="<%= g.kode %> <%= g.nama %>" <%- edit && edit.golongan === g.kode + ' ' + g.nama ? 'selected' : '' %>><%= g.kode %> <%= g.nama %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Bidang</label>
+      <select name="bidang_aset" id="bidangAsetSelect" data-bidang>
+        <option value="">— Pilih —</option>
+        <% pengkodean.bidang.forEach(b => { %>
+        <option value="<%= b.kode %> <%= b.nama %>" <%- edit && edit.bidang_aset === b.kode + ' ' + b.nama ? 'selected' : '' %>><%= b.kode %> <%= b.nama %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Sub / Kode</label>
+      <select name="kode_aset" id="kodeAsetSelect" data-kode>
+        <option value="">— Pilih Bidang dulu —</option>
+      </select>
+      <p class="hint" data-preview></p>
+    </div>
+    <div class="field field-wide">
+      <label>Deskripsi</label>
+      <input type="text" name="deskripsi" value="<%- edit ? edit.deskripsi : '' %>" placeholder="Deskripsi singkat ruangan">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="simpan" class="btn"><%= edit ? 'Simpan Perubahan' : 'Simpan Ruangan' %></button>
+    </div>
+  </form>
+</div>
+<% } %>
+
+<%- include('partials/pengkodean-card') %>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ruangan</th>
+          <th>Golongan</th>
+          <th>Bidang</th>
+          <th>Kode</th>
+          <th>Lokasi</th>
+          <th>Kapasitas</th>
+          <th>Status</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="8" class="empty-cell">Belum ada data ruangan.</td></tr>
+        <% } %>
+        <% list.forEach(r => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= r.nama %></div>
+            <% if (r.deskripsi) { %><div class="cell-sub"><%= r.deskripsi %></div><% } %>
+          </td>
+          <td><%= r.golongan || '—' %></td>
+          <td><%= r.bidang_aset || '—' %></td>
+          <td>
+            <% if (r.kode_aset) { %>
+            <span class="kode-chip"><%= kodeAset(r.golongan, r.bidang_aset, r.kode_aset) %></span>
+            <div class="cell-sub"><%= subNama(r.kode_aset) %></div>
+            <% } else { %>—<% } %>
+          </td>
+          <td><%= r.lokasi || '—' %></td>
+          <td><%= r.kapasitas %> orang</td>
+          <td><%- badge(r.status, 'ruangan') %></td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('peminjaman-ruangan') %>?ruangan_id=<%= r.id %>">Ajukan</a>
+            <% if (isAdmin) { %>
+            <a class="btn btn-sm btn-ghost" href="ruangan?edit=<%= r.id %>">Ubah</a>
+            <form method="post" action="ruangan" class="inline-form" data-confirm="Hapus ruangan <%= r.nama %>?">
+              <%- csrfField %>
+              <input type="hidden" name="id" value="<%= r.id %>">
+              <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% if (isAdmin) { %>
+<div class="card">
+  <div class="card-head"><h2>Kelola Bidang / Unit</h2><span class="cell-sub">Pilihan yang muncul di form peminjaman ruangan</span></div>
+  <form method="post" action="ruangan" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Nama Bidang / Unit Baru</label>
+      <input type="text" name="nama_bidang" placeholder="cth: Keamanan">
+    </div>
+    <div class="form-actions">
+      <button type="submit" name="_aksi" value="tambah_bidang" class="btn">＋ Tambah</button>
+    </div>
+  </form>
+  <div class="table-wrap" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Bidang / Unit</th><th class="th-actions">Aksi</th></tr></thead>
+      <tbody>
+        <% if (bidangList.length === 0) { %><tr><td colspan="2" class="empty-cell">Belum ada bidang.</td></tr><% } %>
+        <% bidangList.forEach(b => { %>
+        <tr>
+          <td><%= b.nama %></td>
+          <td class="table-actions">
+            <form method="post" action="ruangan" class="inline-form" data-confirm="Hapus bidang <%= b.nama %>?">
+              <%- csrfField %><input type="hidden" name="id" value="<%= b.id %>">
+              <button type="submit" name="_aksi" value="hapus_bidang" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } %>
+
+<script>
+/* Data pengkodean aset + nilai kode saat ini (untuk isi sub-bidang saat edit) */
+window.PENGKODEAN = <%- JSON.stringify(pengkodean) %>;
+</script>
+<%- include('partials/foot') %>

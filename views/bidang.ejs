@@ -1,0 +1,47 @@
+<%- include('partials/head', { page: 'bidang' }) %>
+
+<div class="toolbar">
+  <div class="tb-info">Kelola pilihan <strong>Bidang / Unit / Bagian</strong> (dipakai pada form peminjaman ruangan).</div>
+  <a class="btn btn-ghost" href="<%- url('peminjaman-ruangan') %>">Ke Peminjaman Ruangan →</a>
+</div>
+
+<div class="card form-card">
+  <div class="card-head"><h2>Tambah Bidang / Unit / Bagian</h2></div>
+  <form method="post" action="bidang" class="form-grid">
+    <%- csrfField %>
+    <div class="field field-wide">
+      <label>Nama Bidang / Unit / Bagian</label>
+      <input type="text" name="nama" required placeholder="cth: Pramuka / UKS / Dapur" list="daftarBidang">
+      <datalist id="daftarBidang">
+        <% list.forEach(b => { %><option value="<%- b.nama %>"><% }) %>
+      </datalist>
+      <p class="hint">Bisa diketik bebas atau pilih dari daftar yang sudah ada.</p>
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn">Tambah</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nama Bidang / Unit / Bagian</th><th class="th-actions">Aksi</th></tr></thead>
+      <tbody>
+        <% list.forEach(b => { %>
+        <tr>
+          <td><div class="cell-main"><%= b.nama %></div></td>
+          <td class="table-actions">
+            <form method="post" action="<%- url('bidang/' + b.id + '/hapus') %>" class="inline-form" data-confirm="Hapus bidang <%= b.nama %>?">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

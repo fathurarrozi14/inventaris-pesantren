@@ -1,0 +1,6 @@
+node_modules/
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+.vibecoder-media-token

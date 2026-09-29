@@ -1,0 +1,36 @@
+<%- include('partials/head', { page: 'website-profil' }) %>
+
+<form method="post" action="website-profil">
+  <%- csrfField %>
+  <div class="card form-card">
+    <div class="card-head"><h2>Profil Pesantren</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>Judul Seksi Profil</label>
+        <input type="text" name="about_title" value="<%- e(set.about_title) %>" placeholder="Profil Pesantren SahabatQu">
+      </div>
+      <div class="field field-wide">
+        <label>Deskripsi Profil</label>
+        <textarea name="about_text" rows="3" placeholder="Tentang pesantren..."><%- e(set.about_text) %></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Footer Website</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>Teks Footer (bagian paling bawah)</label>
+        <textarea name="footer_text" rows="2" placeholder="Teks footer..."><%- e(set.footer_text) %></textarea>
+        <p class="hint">Gunakan {tahun} untuk tahun otomatis.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions" style="margin-top:4px">
+    <button type="submit" class="btn">Simpan Profil</button>
+    <a class="btn btn-ghost" href="<%- url('.') %>" target="_blank" rel="noopener">Lihat Halaman Website →</a>
+  </div>
+</form>
+
+<%- include('partials/foot') %>

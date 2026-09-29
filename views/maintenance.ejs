@@ -1,0 +1,218 @@
+<%- include('partials/head', { page: 'maintenance' }) %>
+
+<%
+const ST = [['', 'Semua'], ['dilaporkan', 'Dilaporkan'], ['diperbaiki', 'Sedang Diperbaiki'], ['selesai', 'Selesai']];
+const KATS = [['', 'Semua Sub Layanan'], ['kendaraan', 'Service / Perbaikan'], ['elektronik', 'Service Barang'], ['sarana', 'Perawatan Sarana']];
+const qsStatus = (v) => { const p = []; if (v) p.push('status=' + v); if (kat) p.push('kategori=' + kat); return p.length ? '?' + p.join('&') : ''; };
+const qsKat = (v) => { const p = []; if (filter) p.push('status=' + filter); if (v) p.push('kategori=' + v); return p.length ? '?' + p.join('&') : ''; };
+%>
+<div class="toolbar">
+  <form method="get" action="maintenance" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari objek / judul / pelapor...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <div class="tabs">
+    <% ST.forEach(([val, label]) => { %>
+    <a class="<%- filter === val ? 'active' : '' %>" href="maintenance<%- qsStatus(val) %>"><%= label %></a>
+    <% }) %>
+  </div>
+  <div class="tabs">
+    <% KATS.forEach(([val, label]) => { %>
+    <a class="<%- kat === val ? 'active' : '' %>" href="maintenance<%- qsKat(val) %>"><%= label %></a>
+    <% }) %>
+  </div>
+</div>
+
+<div class="card form-card">
+  <div class="card-head">
+    <h2>Lapor Kerusakan / Pemeliharaan</h2>
+  </div>
+  <form method="post" action="maintenance" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Sub Layanan <i>*</i></label>
+      <select name="kategori" id="kategoriSelect" onchange="toggleKategori()">
+        <option value="kendaraan">Service / Perbaikan</option>
+        <option value="elektronik">Service Barang</option>
+        <option value="sarana">Perawatan Sarana</option>
+      </select>
+    </div>
+    <div class="field" id="fieldObjekNama" style="display:none">
+      <label>Nama Kendaraan / Plat <i>*</i></label>
+      <input type="text" name="objek_nama" placeholder="cth: Mobil Operasional — N 1234 XYZ">
+    </div>
+    <div class="field" id="fieldObjekBarang" style="display:none">
+      <label>Barang <i>*</i></label>
+      <select name="barang_id" id="objekBarang">
+        <option value="">— Pilih Barang —</option>
+        <% items.forEach(b => { %><option value="<%= b.id %>"><%= b.nama %></option><% }) %>
+      </select>
+    </div>
+    <div class="field" id="fieldObjekRuangan" style="display:none">
+      <label>Bidang <i>*</i></label>
+      <select id="maintBidang" data-maint-bidang required>
+        <option value="">— Pilih Bidang —</option>
+        <% pengkodean.bidang.forEach(b => { %>
+        <option value="<%= b.kode %>"><%= b.kode %> <%= b.nama %></option>
+        <% }) %>
+      </select>
+      <label>Sub / Kode</label>
+      <select id="maintKode" data-maint-kode>
+        <option value="">— Semua Kode —</option>
+      </select>
+      <input type="hidden" name="ruangan_id" id="maintRuanganId" value="">
+      <input type="hidden" name="area_nama" id="maintObjekNama" value="">
+      <p class="hint" id="maintAreaInfo">Pilih Bidang &amp; Sub/Kode — area pemeliharaan terisi otomatis.</p>
+    </div>
+    <div class="field">
+      <label>Tingkat Kerusakan <i>*</i></label>
+      <select name="tingkat">
+        <option value="ringan">Ringan</option>
+        <option value="sedang">Sedang</option>
+        <option value="berat">Berat</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Judul Laporan <i>*</i></label>
+      <input type="text" name="judul" required placeholder="cth: AC aula bocor">
+    </div>
+    <div class="field field-wide">
+      <label>Deskripsi Kerusakan</label>
+      <textarea name="deskripsi" rows="3" placeholder="Jelaskan kondisi kerusakan secara singkat..."></textarea>
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="ajukan" class="btn">Kirim Laporan</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Objek</th>
+          <th>Laporan</th>
+          <th>Pelapor</th>
+          <th>Tingkat</th>
+          <th>Status</th>
+          <th>Biaya</th>
+          <th>PIC</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="8" class="empty-cell">Tidak ada data pada filter ini.</td></tr>
+        <% } %>
+        <% list.forEach(m => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= m.objek_nama %></div>
+            <div class="cell-sub"><span class="kat kat-<%= m.kategori %>"><%= kategoriLabel(m.kategori) %></span></div>
+          </td>
+          <td>
+            <div class="cell-main"><%= m.judul %></div>
+            <div class="cell-sub">Dilaporkan <%= fmtDateShort(m.tanggal_lapor) %></div>
+          </td>
+          <td><%= m.pelapor_nama %></td>
+          <td><span class="lvl lvl-<%= m.tingkat %>"><%= m.tingkat %></span></td>
+          <td><%- badge(m.status, 'maintenance') %></td>
+          <td class="nowrap"><%= fmtIDR(m.biaya_aktual) %></td>
+          <td><%= m.penanggung_jawab || '—' %></td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="maintenance/<%= m.id %>">Detail</a>
+            <% if (m.status === 'dilaporkan' && isManageStaff) { %>
+              <form method="post" action="maintenance" class="inline-form" data-confirm="Mulai proses perbaikan?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= m.id %>">
+                <button type="submit" name="_aksi" value="mulai" class="btn btn-sm">Mulai</button>
+              </form>
+            <% } %>
+            <% if (isManageStaff) { %>
+              <form method="post" action="maintenance" class="inline-form" data-confirm="Hapus laporan maintenance ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= m.id %>">
+                <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* Pengkodean aset + daftar ruangan untuk form pemeliharaan (Perawatan Sarana) */
+window.PENGKODEAN = <%- JSON.stringify(pengkodean) %>;
+window.MAINT_ROOMS = <%- JSON.stringify(rooms.map(r => ({
+  id: r.id,
+  nama: r.nama,
+  lokasi: r.lokasi || '',
+  golongan: String(r.golongan || '').slice(0, 2),
+  bidang: String(r.bidang_aset || '').slice(0, 2),
+  kode: (String(r.kode_aset || '').match(/^\s*([A-Za-z])/) || [])[1] || ''
+}))) %>;
+(function () {
+  var selBidang = document.querySelector('[data-maint-bidang]');
+  var selKode = document.querySelector('[data-maint-kode]');
+  var hidRuang = document.getElementById('maintRuanganId');
+  var hidNama = document.getElementById('maintObjekNama');
+  var info = document.getElementById('maintAreaInfo');
+  if (!selBidang || !selKode) return;
+  var PK = window.PENGKODEAN || { bidang: [] };
+  var ROOMS = window.MAINT_ROOMS || [];
+  function namaBidang(kode) {
+    var b = null;
+    for (var i = 0; i < PK.bidang.length; i++) {
+      if (PK.bidang[i].kode === kode) { b = PK.bidang[i]; break; }
+    }
+    return b;
+  }
+  function isiKode() {
+    var b = namaBidang(selBidang.value);
+    selKode.innerHTML = '<option value="">— Semua Kode —</option>';
+    if (b) {
+      (b.sub || []).forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.kode;
+        opt.textContent = s.kode + '. ' + s.nama;
+        selKode.appendChild(opt);
+      });
+    }
+    isiArea();
+  }
+  function isiArea() {
+    var bd = selBidang.value;
+    var kd = selKode.value;
+    var b = namaBidang(bd);
+    // ruangan yang cocok dengan bidang (+sub) — dipakai untuk objek
+    var cocok = ROOMS.filter(function (r) {
+      if (!bd) return false;
+      if (r.bidang !== bd) return false;
+      if (kd && r.kode !== kd) return false;
+      return true;
+    });
+    var labelBidang = b ? bd + ' ' + b.nama : '';
+    var labelSub = '';
+    if (b && kd) {
+      (b.sub || []).forEach(function (s) { if (s.kode === kd) labelSub = kd + '. ' + s.nama; });
+    }
+    if (hidRuang) hidRuang.value = cocok.length === 1 ? cocok[0].id : '';
+    if (hidNama) hidNama.value = [labelBidang, labelSub].filter(Boolean).join(' · ') + (cocok.length === 1 ? ' — ' + cocok[0].nama : (cocok.length > 1 ? ' (' + cocok.length + ' ruangan)' : ''));
+    if (info) {
+      if (!bd) info.textContent = 'Pilih Bidang — area pemeliharaan terisi otomatis.';
+      else if (cocok.length === 1) info.textContent = 'Area: ' + hidNama.value;
+      else if (cocok.length > 1) info.textContent = 'Area: ' + hidNama.value + ' — pilih Sub/Kode untuk lebih spesifik.';
+      else info.textContent = 'Area: ' + [labelBidang, labelSub].filter(Boolean).join(' · ') + ' (tanpa ruangan terdaftar)';
+    }
+  }
+  selBidang.addEventListener('change', isiKode);
+  selKode.addEventListener('change', isiArea);
+  isiKode();
+})();
+</script>
+
+<%- include('partials/foot') %>

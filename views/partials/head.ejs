@@ -1,0 +1,276 @@
+<%
+const TITLES = {
+  index: ['Dashboard', 'Ringkasan inventaris & aktivitas Pesantren SahabatQu'],
+  barang: ['Inventaris Barang', 'Kelola data aset & barang pesantren'],
+  ruangan: ['Ruangan', 'Data ruangan & fasilitas pesantren'],
+  'peminjaman-barang': ['Peminjaman Barang', 'Ajukan & kelola peminjaman barang'],
+  'peminjaman-ruangan': ['Peminjaman Ruangan', 'Ajukan & kelola peminjaman ruangan'],
+  mobil: ['Data Mobil', 'Kelola daftar mobil / kendaraan pesantren'],
+  'peminjaman-mobil': ['Peminjaman Mobil', 'Ajukan & kelola peminjaman mobil / kendaraan'],
+  maintenance: ['Pemeliharaan', 'Laporan kerusakan, perbaikan, & jadwal servis'],
+  'pemeliharaan/jadwal': ['Jadwal Pemeliharaan', 'Servis kendaraan, pajak tahunan & bulanan'],
+  jadwal: ['Jadwal Pemeliharaan', 'Servis kendaraan, pajak tahunan & bulanan'],
+  piket: ['Jadwal Piket', 'Jadwal piket cleaning service & checklist harian'],
+  laporan: ['Laporan', 'Cetak laporan inventaris & maintenance'],
+  'cetak-stiker': ['Cetak Stiker', 'Cetak stiker label barcode inventaris'],
+  'pengaturan-website': ['Halaman Website', 'Kelola seluruh tampilan website'],
+  'arsip-surat': ['Arsip Surat Serah Terima', 'Kelola surat serah terima barang & aset'],
+  'audit-log': ['Audit Log', 'Riwayat login & aktivitas pengguna'],
+  backup: ['Backup & Restore', 'Unduh backup database atau pulihkan dari backup'],
+  users: ['Pengguna', 'Kelola akun pengguna sistem'],
+  profile: ['Profil Saya', 'Informasi akun & pengaturan password']
+};
+const t = TITLES[page] || ['Sistem', ''];
+const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const now = new Date();
+const todayStr = HARI[now.getDay()] + ', ' + now.getDate() + ' ' + BULAN[now.getMonth()] + ' ' + now.getFullYear();
+const initial = (u.nama || u.username || '?').charAt(0).toUpperCase();
+%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title><%= t[0] %> — Pesantren SahabatQu</title>
+<% if (logoData) { %>
+<link rel="icon" href="<%- url('logo') %>">
+<% } else { %>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366F1'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z'/%3E%3Crect x='8' y='33' width='32' height='4' rx='2' fill='%238B5CF6'/%3E%3Crect x='4' y='38' width='40' height='5' rx='2.5' fill='%236366F1'/%3E%3Crect x='6' y='24' width='3' height='12' rx='1.5' fill='%23E8C46A'/%3E%3Crect x='39' y='24' width='3' height='12' rx='1.5' fill='%23E8C46A'/%3E%3C/svg%3E">
+<% } %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"></noscript>
+<script>
+/* Terapkan tema sebelum render untuk mencegah kedipan salah tema */
+(function () {
+  var s = null;
+  try { s = localStorage.getItem('sq-theme'); } catch (e) {}
+  var t = s || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<link rel="stylesheet" href="<%- url('style.css?v=18') %>">
+<!-- PWA (Progressive Web App) -->
+<link rel="icon" type="image/png" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="icon" type="image/png" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<link rel="manifest" href="<%- url('manifest.webmanifest') %>">
+<meta name="theme-color" content="#4F46E5">
+<link rel="apple-touch-icon" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="apple-touch-icon" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SINTAPQU">
+<script src="<%- url('pwa.js?v=6') %>" defer></script>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="bg-pattern"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+</div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <a class="side-brand" href="<%- url('.') %>" title="Ke halaman website">
+        <div class="logo-mark">
+          <% if (logoData) { %>
+          <img class="logo-img" src="<%- url('logo') %>" alt="Logo Pesantren">
+          <% } else { %>
+          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#A78BFA"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#lg)" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+            <rect x="8" y="33" width="32" height="4" rx="2" fill="#A78BFA"/>
+            <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#818CF8"/>
+            <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+            <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+            <path d="M28.5 16.5c1.8 2 2.7 3.9 2.7 5.9 0 2.9-2.1 4.6-4.7 4.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+          </svg>
+          <% } %>
+        </div>
+        <div class="logo-text">
+          <strong>Pesantren SahabatQu</strong>
+          <span>Sistem Inventaris &amp; Peminjaman</span>
+        </div>
+      </a>
+      <button class="side-close" id="sideClose" aria-label="Tutup menu">&times;</button>
+    </div>
+
+    <nav class="side-nav">
+      <span class="nav-label">Menu Utama</span>
+      <a href="<%- url('index') %>" class="<%- page === 'index' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Dashboard</a>
+      <a href="<%- url('barang') %>" class="<%- page === 'barang' ? 'active' : '' %>" id="menuBarang">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Inventaris Barang <span class="subnav-arrow">▸</span></a>
+      <div class="subnav subnav-collapse" id="subnavBarang">
+        <a href="<%- url('barang') %>" class="subnav-cat <%- page === 'barang' && !kat ? 'active' : '' %>">Semua Barang</a>
+        <% barangKategori.forEach(k => { %>
+        <div class="subnav-item">
+          <a href="<%- url('barang') %>?kategori=<%= encodeURIComponent(k) %>" class="subnav-cat <%- page === 'barang' && kat === k ? 'active' : '' %>"><%= k %></a>
+          <% if (u.role === 'admin') { %>
+          <button type="button" class="subnav-del-btn" title="Ubah nama kategori" aria-label="Ubah nama kategori <%= k %>"
+            onclick="editKategori(this, '<%- k.replace(/'/g, "\\'") %>')">✏️</button>
+          <form method="post" action="<%- url('barang/kategori/hapus') %>" class="subnav-del" data-confirm="Hapus kategori '<%= k %>'? Barang dengan kategori ini akan menjadi tanpa kategori.">
+            <%- csrfField %>
+            <input type="hidden" name="nama" value="<%- k %>">
+            <button type="submit" class="subnav-del-btn" title="Hapus kategori" aria-label="Hapus kategori <%= k %>">✕</button>
+          </form>
+          <form method="post" action="<%- url('barang/kategori/edit') %>" class="subnav-editform" hidden>
+            <%- csrfField %>
+            <input type="hidden" name="nama" value="<%- k %>">
+            <input type="text" name="nama_baru" value="<%- k %>" required class="subnav-edit-input">
+            <button type="submit" class="btn btn-sm">Simpan</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="batalEditKategori(this)">Batal</button>
+          </form>
+          <% } %>
+        </div>
+        <% }) %>
+        <% if (u.role === 'admin') { %>
+        <form method="post" action="<%- url('barang/kategori') %>" class="subnav-add">
+          <%- csrfField %>
+          <input type="text" name="nama" placeholder="+ kategori baru" required>
+          <button type="submit" class="btn btn-sm">Tambah</button>
+        </form>
+        <% } %>
+      </div>
+      <a href="<%- url('ruangan') %>" class="<%- page === 'ruangan' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg>
+        Ruangan</a>
+      <% if (isManageStaff) { %>
+      <a href="<%- url('mobil') %>" class="<%- page === 'mobil' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5L7.6 5h8.8L18 9.5V17"/><path d="M6 9.5h12"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg>
+        Data Mobil</a>
+      <% } %>
+      <span class="nav-label">Transaksi</span>
+      <a href="<%- url('peminjaman-barang') %>" class="<%- page === 'peminjaman-barang' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8"/><path d="M3.29 7L12 2l8.71 5"/><path d="M7 5v5.5l5 3 5-3V5"/></svg>
+        Peminjaman Barang</a>
+      <a href="<%- url('peminjaman-ruangan') %>" class="<%- page === 'peminjaman-ruangan' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Peminjaman Ruangan</a>
+      <a href="<%- url('peminjaman-mobil') %>" class="<%- page === 'peminjaman-mobil' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5L7.6 5h8.8L18 9.5V17"/><path d="M6 9.5h12"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg>
+        Peminjaman Mobil</a>
+      <a href="<%- url('maintenance') %>" class="<%- page === 'maintenance' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Pemeliharaan</a>
+      <% if (isManageStaff) { %>
+      <a href="<%- url('pemeliharaan/jadwal') %>" class="<%- page === 'pemeliharaan/jadwal' || page === 'jadwal' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
+        Jadwal Pemeliharaan</a>
+      <a href="<%- url('piket') %>" class="<%- page === 'piket' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Jadwal Piket</a>
+      <% } %>
+      <% if (isManageStaff) { %>
+      <span class="nav-label">Pelaporan</span>
+      <a href="<%- url('laporan') %>" class="<%- page === 'laporan' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Laporan &amp; Cetak</a>
+      <a href="<%- url('cetak-stiker') %>" class="<%- page === 'cetak-stiker' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1.5"/><path d="M7 10v11h10V10"/><rect x="7" y="14" width="10" height="3" rx="0.5"/></svg>
+        Cetak Stiker</a>
+      <% } %>
+      <% if (u.role === 'admin') { %>
+      <span class="nav-label">Administrasi</span>
+      <a href="<%- url('pengaturan-website') %>" class="<%- page === 'pengaturan-website' ? 'active' : '' %>">
+        <% if (logoData) { %>
+        <img class="side-menu-logo" src="<%- url('logo') %>" alt="Logo Website">
+        <% } else { %>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <% } %>
+        Halaman Website</a>
+      <a href="<%- url('arsip-surat') %>" class="<%- page === 'arsip-surat' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Arsip Surat Serah Terima</a>
+      <a href="<%- url('audit-log') %>" class="<%- page === 'audit-log' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        Audit Log</a>
+      <a href="<%- url('backup') %>" class="<%- page === 'backup' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Backup &amp; Restore</a>
+      <a href="<%- url('users') %>" class="<%- page === 'users' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Pengguna</a>
+      <% } %>
+      <a href="<%- url('profile') %>" class="<%- page === 'profile' ? 'active' : '' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profil Saya</a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="user-mini">
+        <div class="avatar"><%= initial %></div>
+        <div class="user-mini-info">
+          <strong><%= u.nama %></strong>
+          <span><%= roleLabel(u.role) %></span>
+        </div>
+      </div>
+      <a class="btn-logout" href="<%- url('logout') %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Keluar</a>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Buka menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">
+        <h1><%= t[0] %></h1>
+        <p><%= t[1] %></p>
+      </div>
+      <div class="topbar-right">
+        <% if (isManageStaff) { %>
+        <div class="notif-wrap">
+          <button class="theme-toggle notif-btn" id="notifBtn" type="button" aria-label="Notifikasi" title="Notifikasi belum diproses">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
+          <% if (notifCount > 0) { %><span class="notif-badge"><%= notifCount > 99 ? '99+' : notifCount %></span><% } %>
+          <div class="notif-drop" id="notifDrop">
+            <div class="notif-drop-head"><strong>Belum Diproses</strong><span class="cell-sub"><%= notifCount %> item</span></div>
+            <% if (notifList.length === 0) { %>
+            <p class="cell-sub" style="padding:12px">Tidak ada pengajuan/laporan yang belum diproses. 👍</p>
+            <% } else { %>
+            <% notifList.forEach(n => { %>
+            <a class="notif-item" href="<%- url(n.tipe === 'ruangan' ? 'peminjaman-ruangan' : (n.tipe === 'barang' ? 'peminjaman-barang' : (n.tipe === 'mobil' ? 'peminjaman-mobil' : 'maintenance'))) %>">
+              <strong><%= n.menu %></strong>
+              <span><%= n.judul %></span>
+            </a>
+            <% }) %>
+            <% } %>
+          </div>
+        </div>
+        <% } %>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema terang/gelap" title="Ganti tema terang/gelap">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <span class="date-chip"><%= todayStr %></span>
+        <span class="user-chip"><span class="avatar avatar-sm"><%= initial %></span><%= u.nama.split(' ')[0] %><em><%= roleLabel(u.role) %></em></span>
+      </div>
+    </header>
+
+    <% if (flashes.length) { %>
+    <div class="flash-wrap">
+      <% flashes.forEach(f => { %>
+      <div class="flash flash-<%= f.type %>"><span><%= f.type === 'success' ? '✓' : (f.type === 'danger' ? '✕' : 'ℹ') %></span><%= f.msg %></div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <div class="content">

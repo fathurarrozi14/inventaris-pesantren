@@ -1,0 +1,117 @@
+<%- include('partials/head', { page: 'laporan' }) %>
+
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('laporan') %>">← Kembali ke Laporan</a>
+  <a class="btn btn-ghost" href="<%- url('laporan/peminjaman/excel') %>">⬇ Download Excel</a>
+  <form method="get" action="<%- url('laporan/peminjaman') %>" class="report-filter">
+    <select name="jenis" aria-label="Jenis">
+      <option value="" <%- jenis === '' ? 'selected' : '' %>>Barang + Ruangan</option>
+      <option value="barang" <%- jenis === 'barang' ? 'selected' : '' %>>Barang</option>
+      <option value="ruangan" <%- jenis === 'ruangan' ? 'selected' : '' %>>Ruangan</option>
+    </select>
+    <select name="status" aria-label="Status">
+      <option value="">Semua Status</option>
+      <option value="pending" <%- filter === 'pending' ? 'selected' : '' %>>Menunggu</option>
+      <option value="disetujui" <%- filter === 'disetujui' ? 'selected' : '' %>>Disetujui/Dipinjam</option>
+      <option value="ditolak" <%- filter === 'ditolak' ? 'selected' : '' %>>Ditolak</option>
+      <option value="selesai" <%- filter === 'selesai' ? 'selected' : '' %>>Selesai</option>
+      <option value="dikembalikan" <%- filter === 'dikembalikan' ? 'selected' : '' %>>Dikembalikan</option>
+    </select>
+    <input type="date" name="dari" value="<%- e(dari) %>" aria-label="Dari tanggal">
+    <input type="date" name="sampai" value="<%- e(sampai) %>" aria-label="Sampai tanggal">
+    <button type="submit" class="btn btn-ghost">Filter</button>
+    <a class="btn btn-ghost" href="<%- url('laporan/peminjaman') %>">Reset</a>
+  </form>
+  <button type="button" class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Cetak / PDF
+  </button>
+  <a class="btn btn-ghost" href="<%- url('laporan/peminjaman/excel') %>?<%- ['jenis='+jenis, filter ? 'status='+filter : '', dari ? 'dari='+dari : '', sampai ? 'sampai='+sampai : ''].filter(Boolean).join('&') %>">⬇ Download Excel</a>
+</div>
+
+<div class="print-header">
+  <% if (logoData) { %>
+  <img class="ph-logo ph-logo-img" src="<%- logoData %>" alt="Logo">
+  <% } else { %>
+  <svg class="ph-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path fill="#6366F1" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+    <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+    <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+    <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+    <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+  </svg>
+  <% } %>
+  <div class="ph-text">
+    <h2>PESANTREN SAHABATQU</h2>
+    <p>Sistem Inventaris, Peminjaman &amp; Pemeliharaan</p>
+    <h3>Laporan Peminjaman <%= jenis === 'barang' ? 'Barang' : (jenis === 'ruangan' ? 'Ruangan' : 'Barang & Ruangan') %></h3>
+    <span class="ph-date">Per <%= fmtDate(today()) %> · Dicetak <%= fmtDate(today()) %> oleh <%= u.nama %> · Status: <%- filter ? statusLabel(filter, jenis === 'barang' ? 'barang' : 'ruangan') : 'Semua' %></span>
+  </div>
+</div>
+
+<% if (jenis === '' || jenis === 'ruangan') { %>
+<div class="card">
+  <div class="card-head"><h2>Peminjaman Ruangan</h2><span class="cell-sub"><%= (listR || []).length + ' data' %></span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>No</th><th>Ruangan</th><th>Peminjam</th><th>No. Telepon/WA</th><th>Peserta</th><th>Keperluan</th><th>Waktu</th><th>Status</th></tr></thead>
+      <tbody>
+        <% const rowsR = listR; %>
+        <% if (!rowsR || rowsR.length === 0) { %><tr><td colspan="8" class="empty-cell">Tidak ada data.</td></tr><% } %>
+        <% (rowsR || []).forEach((r, i) => { %>
+        <tr>
+          <td><%= i + 1 %></td>
+          <td><strong><%= r.objek_nama %></strong></td>
+          <td><%= r.nama_peminjam || r.peminjam_nama %></td>
+          <td><%= r.nomor_peminjam || '—' %></td>
+          <td><%= r.jumlah_peserta ? r.jumlah_peserta + ' orang' : '—' %></td>
+          <td><%= r.keperluan %></td>
+          <td class="nowrap"><%= fmtDateShort(r.tanggal_mulai) %> – <%= fmtDateShort(r.tanggal_selesai) %><br><span class="cell-sub"><%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %></span></td>
+          <td><%- badge(r.status, 'ruangan') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } %>
+
+<% if (jenis === '' || jenis === 'barang') { %>
+<div class="card">
+  <div class="card-head"><h2>Peminjaman Barang</h2><span class="cell-sub"><%= (listB || []).length + ' data' %></span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>No</th><th>Barang</th><th>Peminjam</th><th>No. Telepon/WA</th><th>Jumlah</th><th>Waktu</th><th>Status</th></tr></thead>
+      <tbody>
+        <% const rowsB = listB; %>
+        <% if (!rowsB || rowsB.length === 0) { %><tr><td colspan="7" class="empty-cell">Tidak ada data.</td></tr><% } %>
+        <% (rowsB || []).forEach((r, i) => { %>
+        <tr>
+          <td><%= i + 1 %></td>
+          <td><strong><%= r.objek_nama %></strong></td>
+          <td><%= r.nama_peminjam || r.peminjam_nama %></td>
+          <td><%= r.nomor_peminjam || '—' %></td>
+          <td><%= r.jumlah %> <%= r.satuan || '' %></td>
+          <td class="nowrap"><%= fmtDateShort(r.tanggal_pinjam) %> – <%= fmtDateShort(r.tanggal_kembali) %><br><span class="cell-sub"><%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %></span></td>
+          <td><%- badge(r.status, 'barang') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } %>
+
+<div class="signature print-only">
+  <div class="sig-block">
+    <p class="sig-role">Dicetak oleh,</p>
+    <p class="sig-name"><strong><%= u.nama %></strong></p>
+    <p class="sig-sub"><%= roleLabel(u.role) %> · Pesantren SahabatQu</p>
+  </div>
+  <div class="sig-block">
+    <p class="sig-role">Mengetahui,<br>Kepala Sarana &amp; Prasarana</p>
+    <p class="sig-name">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</p>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

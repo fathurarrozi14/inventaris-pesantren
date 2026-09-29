@@ -1,0 +1,316 @@
+<%- include('partials/head', { page: 'pengaturan-website' }) %>
+
+<div class="toolbar">
+  <div class="tb-info">Konten halaman awal website (tampil untuk pengunjung sebelum login).</div>
+  <a class="btn btn-ghost" href="<%- url('.') %>">Lihat Halaman Website →</a>
+</div>
+
+<form method="post" action="pengaturan-website">
+  <%- csrfField %>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Hero Section (Bagian Utama di Bawah Header)</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>Badge (tulisan kecil di atas judul)</label>
+        <input type="text" name="hero_badge" value="<%- e(set.hero_badge) %>" placeholder="cth: Pesantren Islami · Modern · Qur'ani">
+      </div>
+      <div class="field">
+        <label>Judul Hero</label>
+        <input type="text" name="hero_title" value="<%- e(set.hero_title) %>" placeholder="Pesantren SahabatQu">
+      </div>
+      <div class="field">
+        <label>Teks Tombol Masuk</label>
+        <input type="text" name="btn_login" value="<%- e(set.btn_login) %>" placeholder="Masuk ke Sistem Inventaris">
+      </div>
+      <div class="field field-wide">
+        <label>Deskripsi Hero</label>
+        <textarea name="hero_sub" rows="2" placeholder="Kalimat pembuka halaman website"><%- e(set.hero_sub) %></textarea>
+      </div>
+      <div class="field field-wide">
+        <label>Gambar Hero (rekomendasi: landscape lebar, mis. 1200×500)</label>
+        <div class="foto-upload">
+          <div class="hero-img-preview" id="heroImgPreview">
+            <% if (set.hero_image) { %><img src="<%- e(set.hero_image) %>" alt="Hero"><% } else { %><span class="foto-empty">Belum ada gambar hero</span><% } %>
+          </div>
+          <div class="foto-controls">
+            <label class="btn btn-ghost btn-sm" for="heroImgFile">Pilih Gambar…</label>
+            <input type="file" id="heroImgFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+            <input type="hidden" name="hero_image" id="heroImg" value="<%- e(set.hero_image || '') %>">
+            <% if (set.hero_image) { %>
+            <button type="submit" name="_aksi" value="hapus_hero_image" class="btn btn-danger btn-sm" data-confirm="Hapus gambar hero?">Hapus Gambar</button>
+            <% } %>
+            <p class="hint">PNG/JPG/WebP maks 2 MB · direkomendasikan landscape lebar.</p>
+          </div>
+        </div>
+      </div>
+      <div class="field field-wide">
+        <label>Catatan Kecil (di bawah tombol)</label>
+        <input type="text" name="hero_note" value="<%- e(set.hero_note) %>">
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Logo Website</h2></div>
+    <div class="logo-edit">
+      <div class="logo-preview" id="logoPreviewBox">
+        <% if (set.logo_data) { %>
+        <img id="logoPreview" src="<%- e(set.logo_data) %>" alt="Logo saat ini">
+        <% } else { %>
+        <span id="logoPreview" class="logo-preview-empty">Logo default</span>
+        <% } %>
+      </div>
+      <div class="logo-edit-controls">
+        <label class="btn btn-ghost" for="logoFile">Pilih Foto Logo…</label>
+        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+        <input type="hidden" name="logo_data" id="logoData" value="<%- e(set.logo_data || '') %>">
+        <p class="hint" id="logoStatus">PNG / JPG / GIF / WebP, maksimal 2 MB. <strong>Rekomendasi: logo transparan atau persegi.</strong> Logo dipakai di header homepage, login, dan sidebar.</p>
+        <% if (set.logo_data) { %>
+        <button type="submit" name="_aksi" value="hapus_logo" class="btn btn-danger btn-sm" data-confirm="Kembalikan logo ke logo default?">Kembalikan Logo Default</button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Deskripsi Seksi Halaman</h2></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Judul Info Inventaris</label>
+        <input type="text" name="title_inventaris" value="<%- e(set.title_inventaris) %>" placeholder="Info Inventaris">
+      </div>
+      <div class="field">
+        <label>Judul Pemeliharaan</label>
+        <input type="text" name="title_maintenance" value="<%- e(set.title_maintenance) %>" placeholder="Pemeliharaan Sedang Berjalan">
+      </div>
+      <div class="field">
+        <label>Judul Kontak</label>
+        <input type="text" name="title_kontak" value="<%- e(set.title_kontak) %>" placeholder="Kontak & Layanan">
+      </div>
+      <div class="field">
+        <label>Keterangan Info Inventaris</label>
+        <input type="text" name="sub_inventaris" value="<%- e(set.sub_inventaris) %>">
+      </div>
+      <div class="field">
+        <label>Keterangan Pemeliharaan</label>
+        <input type="text" name="sub_maintenance" value="<%- e(set.sub_maintenance) %>">
+      </div>
+      <div class="field">
+        <label>Keterangan Kontak</label>
+        <input type="text" name="sub_kontak" value="<%- e(set.sub_kontak) %>">
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Tombol WhatsApp</h2></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Label Nomor 1</label>
+        <input type="text" name="wa_label1" value="<%- e(set.wa_label1) %>" placeholder="cth: Pak Hasan (Sarpras)">
+      </div>
+      <div class="field">
+        <label>Label Nomor 2</label>
+        <input type="text" name="wa_label2" value="<%- e(set.wa_label2) %>" placeholder="cth: Pak Ustadz Ahmad">
+      </div>
+      <div class="field">
+        <label>Nomor WhatsApp 1 (khusus tombol WhatsApp di website)</label>
+        <input type="text" name="wa_telepon1" value="<%- e(set.wa_telepon1 || set.kontak_telepon) %>" placeholder="cth: 0812-3456-7890">
+      </div>
+      <div class="field">
+        <label>Nomor WhatsApp 2 (opsional — muncul 2 pilihan saat tombol WA diklik)</label>
+        <input type="text" name="wa_telepon2" value="<%- e(set.wa_telepon2) %>" placeholder="cth: 0856-4183-8302">
+      </div>
+      <div class="field">
+        <label>Nomor WhatsApp Khusus Pemeliharaan (opsional — ikon WA kedua melayang di website untuk lapor kerusakan)</label>
+        <input type="text" name="wa_maintenance" value="<%- e(set.wa_maintenance) %>" placeholder="cth: 0812-3456-7890">
+      </div>
+      <div class="field">
+        <label>Label Tombol WhatsApp Pemeliharaan</label>
+        <input type="text" name="wa_maint_label" value="<%- e(set.wa_maint_label) %>" placeholder="cth: Lapor Pemeliharaan">
+      </div>
+      <div class="field field-wide">
+        <label>Nomor WhatsApp Info Peminjaman Mobil (pengaju wajib chat dulu sebelum mengisi formulir peminjaman mobil)</label>
+        <input type="text" name="wa_mobil" value="<%- e(set.wa_mobil) %>" placeholder="cth: +62 856-4183-8302">
+        <p class="hint">Kosongkan untuk memakai <strong>Telepon / WA</strong> di kartu Kontak &amp; Layanan. Nomor ini tampil sebagai tombol WhatsApp di halaman <strong>Peminjaman Mobil</strong> (halaman depan formulir) dan wajib dicentang pengaju bahwa sudah chat.</p>
+      </div>
+      <div class="field field-wide">
+        <label>Pesan Otomatis WhatsApp (terkirim saat tombol WA diklik)</label>
+        <textarea name="wa_pesan" rows="2" placeholder="Assalamualaikum, saya ingin bertanya..."><%- e(set.wa_pesan) %></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Kontak &amp; Layanan</h2></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Ukuran Kartu Kontak</label>
+        <select name="kontak_size">
+          <option value="small" <%- set.kontak_size === 'small' ? 'selected' : '' %>>Kecil</option>
+          <option value="medium" <%- !set.kontak_size || set.kontak_size === 'medium' ? 'selected' : '' %>>Sedang (default)</option>
+          <option value="large" <%- set.kontak_size === 'large' ? 'selected' : '' %>>Besar</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Alamat</label>
+        <input type="text" name="kontak_alamat" value="<%- e(set.kontak_alamat) %>">
+      </div>
+      <div class="field">
+        <label>Telepon / WA (tampil di kontak website — nomor sendiri, terpisah dari tombol WhatsApp)</label>
+        <input type="text" name="kontak_telepon" value="<%- e(set.kontak_telepon) %>" placeholder="cth: 0812-3456-7890">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" name="kontak_email" value="<%- e(set.kontak_email) %>">
+      </div>
+      <div class="field">
+        <label>Jam Layanan</label>
+        <input type="text" name="kontak_jam" value="<%- e(set.kontak_jam) %>">
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Banner Penutup (CTA)</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>Judul Banner</label>
+        <input type="text" name="cta_title" value="<%- e(set.cta_title) %>">
+      </div>
+      <div class="field field-wide">
+        <label>Keterangan Banner</label>
+        <textarea name="cta_sub" rows="2" placeholder="Ajakan untuk masuk ke sistem"><%- e(set.cta_sub) %></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Header Navigation (Bagian Atas)</h2></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Nama / Judul Header</label>
+        <input type="text" name="header_brand" value="<%- e(set.header_brand) %>" placeholder="Pesantren SahabatQu">
+      </div>
+      <div class="field">
+        <label>Sub Judul Header</label>
+        <input type="text" name="header_tagline" value="<%- e(set.header_tagline) %>" placeholder="Sistem Inventaris, Peminjaman & Pemeliharaan">
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Footer Website (Bagian Paling Bawah)</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>Teks Footer</label>
+        <textarea name="footer_text" rows="2" placeholder="Teks footer..."><%- e(set.footer_text) %></textarea>
+        <p class="hint">Gunakan {tahun} untuk tahun otomatis.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>URL Website</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>Alamat Website (dipakai untuk QR/barcode stiker)</label>
+        <input type="text" name="url_website" value="<%- e(set.url_website) %>" placeholder="https://...">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions" style="margin-top:4px">
+    <button type="submit" class="btn">Simpan Pengaturan</button>
+    <a class="btn btn-ghost" href="<%- url('index') %>">Batal</a>
+  </div>
+</form>
+
+<script>
+(function () {
+  var file = document.getElementById('logoFile');
+  var hidden = document.getElementById('logoData');
+  var preview = document.getElementById('logoPreview');
+  var status = document.getElementById('logoStatus');
+  if (file && hidden && preview) {
+    file.addEventListener('change', function () {
+      var f = file.files && file.files[0];
+      if (!f) return;
+      if (!/^image\/(png|jpe?g|gif|webp)$/i.test(f.type)) {
+        alert('File harus berupa gambar (PNG/JPG/GIF/WebP).');
+        file.value = '';
+        return;
+      }
+      if (f.size > 2 * 1024 * 1024) {
+        alert('Ukuran gambar maksimal 2 MB.');
+        file.value = '';
+        return;
+      }
+      var rd = new FileReader();
+      rd.onload = function () {
+        // Kompres logo: resize ke maks 256px via canvas supaya file kecil (loading website cepat)
+        var img = new Image();
+        img.onload = function () {
+          var MAX = 256;
+          var w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            var r = Math.min(MAX / w, MAX / h);
+            w = Math.round(w * r); h = Math.round(h * r);
+          }
+          var c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          var out = c.toDataURL('image/jpeg', 0.82);
+          if (out.length > hidden.value.length && hidden.value) out = rd.result; // jaga-jaga
+          hidden.value = out;
+          preview.src = out;
+          preview.classList.remove('logo-preview-empty');
+          preview.textContent = '';
+          if (status) status.innerHTML = '✓ Logo baru dipilih & dikompres. Klik <strong>Simpan Pengaturan</strong>.';
+        };
+        img.onerror = function () { hidden.value = rd.result; };
+        img.src = rd.result;
+      };
+      rd.readAsDataURL(f);
+    });
+  }
+  // Gambar hero
+  var hf = document.getElementById('heroImgFile');
+  var hh = document.getElementById('heroImg');
+  var hp = document.getElementById('heroImgPreview');
+  if (hf && hh && hp) {
+    hf.addEventListener('change', function () {
+      var f = hf.files && hf.files[0];
+      if (!f) return;
+      if (!/^image\/(png|jpe?g|gif|webp)$/i.test(f.type)) { alert('File harus gambar (PNG/JPG/GIF/WebP).'); hf.value = ''; return; }
+      if (f.size > 2 * 1024 * 1024) { alert('Ukuran gambar maksimal 2 MB.'); hf.value = ''; return; }
+      var rd = new FileReader();
+      rd.onload = function () {
+        // Kompres hero: resize maks 1200px supaya loading front cepat
+        var img = new Image();
+        img.onload = function () {
+          var MAX = 1200;
+          var w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            var r = Math.min(MAX / w, MAX / h);
+            w = Math.round(w * r); h = Math.round(h * r);
+          }
+          var c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          var out = c.toDataURL('image/jpeg', 0.82);
+          if (out.length > hh.value.length && hh.value) out = rd.result;
+          hh.value = out;
+          hp.innerHTML = '<img src="' + out + '" alt="Hero">';
+        };
+        img.onerror = function () { hh.value = rd.result; };
+        img.src = rd.result;
+      };
+      rd.readAsDataURL(f);
+    });
+  }
+})();
+</script>
+
+<%- include('partials/foot') %>

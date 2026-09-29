@@ -1,0 +1,65 @@
+<%- include('partials/head', { page: 'cetak-stiker' }) %>
+
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('cetak-stiker') %>">← Kembali</a>
+  <button type="button" class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Cetak Stiker
+  </button>
+  <span class="tb-info"><%= selected.length %> barang · <%= jml %> salinan per stiker = <strong><%= selected.length * jml %></strong> stiker</span>
+</div>
+
+<% if (selected.length === 0) { %>
+<div class="card"><p class="empty">Tidak ada barang dipilih. <a class="link-more" href="<%- url('cetak-stiker') %>">Kembali pilih barang →</a></p></div>
+<% } else { %>
+  <% // Kelompokkan stiker per 3 -> satu "halaman" cetak (kiri, tengah, kanan)
+     const stkChunks = [];
+     let stkCur = [];
+     selected.forEach(b => {
+       for (let k = 0; k < jml; k++) {
+         stkCur.push(b);
+         if (stkCur.length === 3) { stkChunks.push(stkCur); stkCur = []; }
+       }
+     });
+     if (stkCur.length) stkChunks.push(stkCur);
+  %>
+  <div class="sticker-sheet">
+    <% stkChunks.forEach((chunk, ci) => { %>
+    <div class="stk-page<%= ci === stkChunks.length - 1 ? ' stk-page-last' : '' %>">
+      <% chunk.forEach(b => { %>
+      <div class="sticker">
+        <div class="stk-top">
+          <% if (logoData) { %>
+          <img class="stk-logo" src="<%- logoData %>" alt="Logo">
+          <% } else { %>
+          <svg class="stk-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="stlg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#8B5CF6"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#stlg)" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+            <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+            <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+            <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+            <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+          </svg>
+          <% } %>
+          <div class="stk-head">PESANTREN<br>SAHABATQU</div>
+        </div>
+        <div class="stk-qr">
+          <% if (b.qr) { %><img src="<%- b.qr %>" alt="QR"><% } %>
+          <span class="stk-qr-hint">Scan → kode aset</span>
+        </div>
+        <div class="stk-name"><%= b.nama %></div>
+        <div class="stk-code"><%= kodeStikerTampil(b, b.id, tipe) %></div>
+        <div class="stk-sub"><% if (tipe === 'ruangan') { %><%= b.golongan || '—' %><% } else { %><%= b.kategori || '—' %><% } %><% if (b.lokasi) { %> · <%= b.lokasi %><% } %></div>
+        <div class="stk-time"><%= fmtDate(waktuCetak.tgl) %> · <%= waktuCetak.jam %> WIB</div>
+      </div>
+      <% }) %>
+    </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>

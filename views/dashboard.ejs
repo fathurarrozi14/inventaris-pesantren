@@ -1,0 +1,216 @@
+<%- include('partials/head', { page: 'index' }) %>
+
+<% const role = u.role; %>
+<div class="toolbar dash-toolbar">
+  <form method="get" action="<%- url('barang') %>" class="search-box dash-search">
+    <input type="search" name="q" value="" placeholder="Cari inventaris barang...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <span class="tb-info">Klik kartu ringkasan untuk membuka halamannya.</span>
+</div>
+
+<div class="stat-grid">
+  <a class="card stat stat-link" href="<%- url('barang') %>">
+    <div class="stat-icon si-indigo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Total Stok Barang</span>
+      <strong class="stat-value"><%= stats.stokTotal.toLocaleString('id-ID') %></strong>
+      <small><%= stats.barangJenis %> jenis · <%= stats.stokTersedia.toLocaleString('id-ID') %> tersedia</small>
+    </div>
+  </a>
+  <a class="card stat stat-link" href="<%- url('ruangan') %>">
+    <div class="stat-icon si-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Ruangan Terdaftar</span>
+      <strong class="stat-value"><%= stats.ruangan %></strong>
+      <small>masjid · aula · kelas · asrama</small>
+    </div>
+  </a>
+  <a class="card stat stat-link" href="<%- url('peminjaman-ruangan') %>">
+    <div class="stat-icon si-violet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Peminjaman Aktif</span>
+      <strong class="stat-value"><%= stats.pinjamAktif %></strong>
+      <small>barang, ruangan &amp; mobil berjalan</small>
+    </div>
+  </a>
+  <a class="card stat stat-link" href="<%- url('maintenance') %>">
+    <div class="stat-icon si-gold">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Pemeliharaan Berjalan</span>
+      <strong class="stat-value"><%= stats.maintBerjalan %></strong>
+      <small><%= stats.maintSelesai %> selesai · biaya <%= fmtIDR(stats.biayaMaint) %></small>
+    </div>
+  </a>
+  <% if (role === 'admin') { %>
+  <a class="card stat stat-link" href="<%- url('users') %>">
+    <div class="stat-icon si-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Pengguna Aktif</span>
+      <strong class="stat-value"><%= stats.pengguna %></strong>
+      <small>admin · operator · santri/guru</small>
+    </div>
+  </a>
+  <% } %>
+</div>
+
+<% if (isManageStaff && serviceReminder.length > 0) { %>
+<div class="card panel">
+  <div class="card-head">
+    <h2>🚗 Pengingat Jadwal Pemeliharaan</h2>
+    <a class="link-more" href="<%- url('pemeliharaan/jadwal') %>">Semua jadwal →</a>
+  </div>
+  <div class="feed">
+    <% serviceReminder.forEach(s => { %>
+    <div class="feed-item">
+      <div class="feed-icon fi-wrench">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="feed-body">
+        <strong><%= s.objek_nama %> — <%= s.jenis %></strong>
+        <span>Jadwal: <strong><%= fmtDate(s.service_selanjutnya) %></strong></span>
+        <small>
+          <% if (s.sisa < 0) { %><span class="svc svc-late">Terlambat <%= Math.abs(s.sisa) %> hari</span>
+          <% } else if (s.sisa === 0) { %><span class="svc svc-now">Hari ini</span>
+          <% } else { %><span class="svc svc-soon">H-<%= s.sisa %></span><% } %>
+        </small>
+      </div>
+      <a class="btn btn-sm btn-ghost" href="<%- url('pemeliharaan/jadwal') %>">Detail</a>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<div class="recent-grid">
+  <div class="card panel">
+    <div class="card-head">
+      <h2>Peminjaman Ruangan Terbaru</h2>
+      <a class="link-more" href="<%- url('peminjaman-ruangan') %>">Lihat semua →</a>
+    </div>
+    <% if (recentPR.length === 0) { %>
+      <p class="empty">Belum ada pengajuan peminjaman ruangan.</p>
+    <% } else { %>
+    <div class="feed">
+      <% recentPR.forEach(r => { %>
+      <div class="feed-item">
+        <div class="feed-icon fi-calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="feed-body">
+          <strong><%= r.ruangan_nama %></strong>
+          <span><%= r.keperluan %> · <%= r.nama_peminjam || r.peminjam_nama %><% if (r.jumlah_peserta) { %> · <%= r.jumlah_peserta %> peserta<% } %></span>
+          <small><%= fmtDateShort(r.tanggal_mulai) %> – <%= fmtDateShort(r.tanggal_selesai) %> · <%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %></small>
+        </div>
+        <%- badge(r.status, 'ruangan') %>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="card panel">
+    <div class="card-head">
+      <h2>Peminjaman Barang Terbaru</h2>
+      <a class="link-more" href="<%- url('peminjaman-barang') %>">Lihat semua →</a>
+    </div>
+    <% if (recentPB.length === 0) { %>
+      <p class="empty">Belum ada pengajuan peminjaman barang.</p>
+    <% } else { %>
+    <div class="feed">
+      <% recentPB.forEach(r => { %>
+      <div class="feed-item">
+        <div class="feed-icon fi-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8"/><path d="M3.29 7L12 2l8.71 5"/><path d="M7 5v5.5l5 3 5-3V5"/></svg>
+        </div>
+        <div class="feed-body">
+          <strong><%= r.barang_nama %> × <%= r.jumlah %> <%= r.satuan %></strong>
+          <span><%= r.keperluan %> · <%= r.nama_peminjam || r.peminjam_nama %></span>
+          <small><%= fmtDateShort(r.tanggal_pinjam) %> – <%= fmtDateShort(r.tanggal_kembali) %> · <%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %></small>
+        </div>
+        <%- badge(r.status, 'barang') %>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="card panel panel-wide">
+    <div class="card-head">
+      <h2>Peminjaman Mobil Terbaru</h2>
+      <a class="link-more" href="<%- url('peminjaman-mobil') %>">Lihat semua →</a>
+    </div>
+    <% if (recentPM.length === 0) { %>
+      <p class="empty">Belum ada pengajuan peminjaman mobil.</p>
+    <% } else { %>
+    <div class="feed">
+      <% recentPM.forEach(r => { %>
+      <div class="feed-item">
+        <div class="feed-icon fi-car">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5L7.6 5h8.8L18 9.5V17"/><path d="M6 9.5h12"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg>
+        </div>
+        <div class="feed-body">
+          <strong><%= r.mobil_nama %><% if (r.mobil_plat) { %> · <%= r.mobil_plat %><% } %></strong>
+          <span><%= r.keperluan %> · <%= r.peminjam_tampil %><% if (r.jumlah_penumpang) { %> · <%= r.jumlah_penumpang %> penumpang<% } %></span>
+          <small><%= fmtDateShort(r.tanggal_mulai) %> – <%= fmtDateShort(r.tanggal_selesai) %> · <%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %> WIB</small>
+        </div>
+        <%- badge(r.status, 'ruangan') %>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="card panel panel-wide">
+    <div class="card-head">
+      <h2>Pemeliharaan Terbaru</h2>
+      <a class="link-more" href="<%- url('maintenance') %>">Lihat semua →</a>
+    </div>
+    <% if (recentM.length === 0) { %>
+      <p class="empty">Belum ada laporan maintenance.</p>
+    <% } else { %>
+    <div class="feed">
+      <% recentM.forEach(r => { %>
+      <div class="feed-item">
+        <div class="feed-icon fi-wrench">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div class="feed-body">
+          <strong><%= r.objek_nama %> — <%= r.judul %></strong>
+          <span>Dilaporkan <%= r.pelapor_nama %> · <%= fmtDateShort(r.tanggal_lapor) %></span>
+          <small><%= kategoriLabel(r.kategori) %> · <%= r.tingkat %> · PIC: <%= r.penanggung_jawab || 'belum ditunjuk' %></small>
+        </div>
+        <%- badge(r.status, 'maintenance') %>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/foot') %>
+<script>
+/* Auto-refresh ringan: cek tiap 45 detik apakah ada peminjaman ruangan yang baru lewat
+   batas selesai — jika ya, muat ulang halaman agar status berubah jadi "Selesai". */
+(function () {
+  var cek = function () {
+    fetch('<%- url('api/status-peminjaman-ruangan') %>', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d && d.changed > 0) location.reload(); })
+      .catch(function () {});
+  };
+  setInterval(cek, 45000);
+})();
+</script>

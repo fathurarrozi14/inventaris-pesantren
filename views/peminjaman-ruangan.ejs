@@ -1,0 +1,232 @@
+<%- include('partials/head', { page: 'peminjaman-ruangan' }) %>
+
+<% const TABS = [['', 'Semua'], ['pending', 'Menunggu'], ['disetujui', 'Disetujui'], ['ditolak', 'Ditolak'], ['selesai', 'Selesai'], ['dibatalkan', 'Dibatalkan']]; %>
+<div class="toolbar">
+  <form method="get" action="peminjaman-ruangan" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari ruangan / keperluan / peminjam / telp...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <select class="breakdown-select" style="max-width:240px" onchange="if (this.value) location.href = 'peminjaman-ruangan?golongan=' + encodeURIComponent(this.value) + (new URLSearchParams(location.search).get('status') ? '&status=' + new URLSearchParams(location.search).get('status') : ''); else location.href = 'peminjaman-ruangan';">
+    <option value="">— Semua Golongan —</option>
+    <% ['01 Tanah','02 Bangunan','03 Peralatan','04 Perlengkapan'].forEach(g => { %>
+    <option value="<%= g %>" <%- gol === g ? 'selected' : '' %>><%= g %></option>
+    <% }) %>
+  </select>
+  <div class="tabs">
+    <% TABS.forEach(([val, label]) => { %>
+    <a class="<%- filter === val ? 'active' : '' %>" href="peminjaman-ruangan<%- val ? '?status=' + val : '' %>"><%= label %></a>
+    <% }) %>
+  </div>
+</div>
+
+<div class="card form-card">
+  <div class="card-head">
+    <h2><%= edit ? 'Edit Peminjaman Ruangan #' + edit.id : 'Ajukan Peminjaman Ruangan' %></h2>
+    <% if (edit) { %><a class="link-more" href="peminjaman-ruangan">Batal edit</a><% } %>
+  </div>
+  <% if (roomJadwal && roomJadwal.length) { %>
+  <div class="room-busy-notice">
+    <strong>⚠️ Ruangan ini telah dipinjam (sudah disetujui) — periksa jadwal berikut sebelum mengajukan:</strong>
+    <ul>
+      <% roomJadwal.forEach(j => { %>
+      <li><%= fmtDateShort(j.tanggal_mulai) %> – <%= fmtDateShort(j.tanggal_selesai) %> · <%= j.jam_mulai || '08:00' %>–<%= j.jam_selesai || '17:00' %> WIB · oleh <b><%= j.peminjam_tampil %></b> (<%= j.keperluan %>)</li>
+      <% }) %>
+    </ul>
+  </div>
+  <% } %>
+  <form method="post" action="<%- url(edit ? 'peminjaman-ruangan/' + edit.id : 'peminjaman-ruangan') %>" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Ruangan <i>*</i></label>
+      <select name="ruangan_id" required id="ruanganSelect" onchange="toggleRuanganBaru()">
+        <option value="">— Pilih Ruangan —</option>
+        <% rooms.forEach(r => { %>
+        <option value="<%= r.id %>" <%- (edit ? edit.ruangan_id : preselect) === r.id ? 'selected' : '' %>><%= r.nama %> (<%= r.lokasi || 'tanpa lokasi' %>)</option>
+        <% }) %>
+        <% if (isManageStaff) { %><option value="0">＋ Tambah Ruangan Baru...</option><% } %>
+      </select>
+      <% if (isManageStaff) { %>
+      <div class="ruangan-baru" id="ruanganBaruBox" style="display:none;margin-top:8px">
+        <input type="text" name="nama_ruangan_baru" id="namaRuanganBaru" placeholder="Nama ruangan baru (cth: Aula Baru)" style="margin-bottom:6px">
+        <input type="text" name="lokasi_ruangan_baru" placeholder="Lokasi (cth: Gedung B)">
+      </div>
+      <% } %>
+    </div>
+    <div class="field">
+      <label>Keperluan <i>*</i></label>
+      <input type="text" name="keperluan" required placeholder="cth: Kajian Kitab Kuning" value="<%- edit ? e(edit.keperluan) : '' %>">
+    </div>
+    <div class="field">
+      <label>Jumlah Peserta</label>
+      <input type="number" name="jumlah_peserta" min="0" value="<%- edit && edit.jumlah_peserta ? edit.jumlah_peserta : '' %>" placeholder="cth: 50">
+      <p class="hint">Perkiraan jumlah peserta kegiatan.</p>
+    </div>
+    <div class="field">
+      <label>Nama Peminjam <i>*</i></label>
+      <input type="text" name="nama_peminjam" required placeholder="cth: Ustadz Ahmad" value="<%- edit ? e(edit.nama_peminjam || '') : e(u.nama) %>">
+    </div>
+    <div class="field">
+      <label>Nomor Telepon / WhatsApp <i>*</i></label>
+      <input type="text" name="nomor_peminjam" required placeholder="cth: 0856 4183 8302" value="<%- edit ? e(edit.nomor_peminjam) : '' %>">
+    </div>
+    <div class="field">
+      <label>Bidang / Unit / Bagian</label>
+      <input type="text" name="bidang" list="daftarBidang" value="<%- edit ? e(edit.bidang) : '' %>" placeholder="Ketik atau pilih...">
+      <datalist id="daftarBidang">
+        <% bidangList.forEach(o => { %><option value="<%- o %>"><% }) %>
+        <option value="＋ Tambah Bidang Baru">
+      </datalist>
+      <% if (isManageStaff) { %>
+      <p class="hint">Admin dapat menambah pilihan baru di menu <a class="link-more" href="<%- url('ruangan') %>">Ruangan → Kelola Bidang/Unit</a>.</p>
+      <% } %>
+    </div>
+    <div class="field">
+      <label>Mulai — Tanggal &amp; Jam <i>*</i></label>
+      <div class="dt-row">
+        <input type="date" name="tanggal_mulai" required value="<%- edit ? edit.tanggal_mulai : today() %>">
+        <input type="time" name="jam_mulai" required value="<%- edit ? edit.jam_mulai : '08:00' %>">
+      </div>
+    </div>
+    <div class="field">
+      <label>Selesai — Tanggal &amp; Jam <i>*</i></label>
+      <div class="dt-row">
+        <input type="date" name="tanggal_selesai" required value="<%- edit ? edit.tanggal_selesai : today() %>">
+        <input type="time" name="jam_selesai" required value="<%- edit ? edit.jam_selesai : '17:00' %>">
+      </div>
+    </div>
+    <div class="field field-wide">
+      <label>Catatan (opsional)</label>
+      <input type="text" name="catatan" placeholder="Keterangan tambahan untuk petugas" value="<%- edit ? e(edit.catatan) : '' %>">
+    </div>
+    <% if (edit && isManageStaff) { %>
+    <div class="field field-wide">
+      <label>Status Peminjaman</label>
+      <select name="status">
+        <option value="pending" <%- edit.status === 'pending' ? 'selected' : '' %>>Menunggu</option>
+        <option value="disetujui" <%- edit.status === 'disetujui' ? 'selected' : '' %>>Disetujui</option>
+        <option value="ditolak" <%- edit.status === 'ditolak' ? 'selected' : '' %>>Ditolak</option>
+        <option value="selesai" <%- edit.status === 'selesai' ? 'selected' : '' %>>Selesai</option>
+        <option value="dibatalkan" <%- edit.status === 'dibatalkan' ? 'selected' : '' %>>Dibatalkan</option>
+      </select>
+      <p class="hint">Ubah status peminjaman (mis. kembalikan ke <strong>Menunggu</strong> untuk diproses ulang).</p>
+    </div>
+    <% } %>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="ajukan" class="btn"><%= edit ? 'Simpan Perubahan' : 'Kirim Pengajuan' %></button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <% if (!isManageStaff) { %>
+  <p class="hint" style="margin-bottom:12px">
+    Anda melihat <strong>pengajuan Anda sendiri</strong> (semua status) <strong>serta seluruh peminjaman yang sudah disetujui</strong> — termasuk milik pengguna lain, karena jadwal yang disetujui tampil publik di website. Pengajuan orang lain yang masih menunggu/ditolak tidak ditampilkan.
+  </p>
+  <% } %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ruangan</th>
+          <th>Peminjam</th>
+          <th>No. Telepon/WA</th>
+          <th>Bidang/Unit</th>
+          <th>Peserta</th>
+          <th>Keperluan</th>
+          <th>Tanggal</th>
+          <th>Status</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="9" class="empty-cell">Tidak ada data pada filter ini.</td></tr>
+        <% } %>
+        <% list.forEach(r => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= r.ruangan_nama %></div>
+            <% if (r.catatan) { %><div class="cell-sub">Catatan: <%= r.catatan %></div><% } %>
+          </td>
+          <td>
+            <div class="cell-main"><%= r.nama_peminjam || r.peminjam_nama %></div>
+            <div class="cell-sub">@<%= r.peminjam_username %></div>
+          </td>
+          <td><%= r.nomor_peminjam || '—' %></td>
+          <td><%= r.bidang || '—' %></td>
+          <td><%= r.jumlah_peserta ? r.jumlah_peserta + ' orang' : '—' %></td>
+          <td><%= r.keperluan %></td>
+          <td class="nowrap">
+            <%= fmtDateShort(r.tanggal_mulai) %> – <%= fmtDateShort(r.tanggal_selesai) %>
+            <br><span class="cell-sub"><%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %> WIB</span>
+          </td>
+          <td><%- badge(r.status, 'ruangan') %></td>
+          <td class="table-actions">
+            <% // Tombol Edit: bagian dari staf bisa edit/melihat; pemilik bisa edit saat pending/ditolak %>
+            <% if (isManageStaff || (['pending','ditolak'].includes(r.status) && u.id === r.peminjam_id)) { %>
+              <a class="btn btn-sm btn-ghost" href="<%- url('peminjaman-ruangan') %>?edit=<%= r.id %>">Edit</a>
+            <% } %>
+            <% if (['pending','ditolak'].includes(r.status) && isManageStaff) { %>
+              <form method="post" action="peminjaman-ruangan" class="inline-form">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="setujui" class="btn btn-sm">Setujui</button>
+              </form>
+              <form method="post" action="peminjaman-ruangan" class="inline-form reject-form">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <input type="text" name="catatan" placeholder="Alasan (opsional)" class="input-mini">
+                <button type="submit" name="_aksi" value="tolak" class="btn btn-sm btn-danger">Tolak</button>
+              </form>
+            <% } else if (r.status === 'pending' && u.id === r.peminjam_id) { %>
+              <form method="post" action="peminjaman-ruangan" class="inline-form" data-confirm="Batalkan pengajuan ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="batalkan" class="btn btn-sm btn-ghost">Batalkan</button>
+              </form>
+            <% } else if (r.status === 'disetujui' && isManageStaff) { %>
+              <form method="post" action="peminjaman-ruangan" class="inline-form" data-confirm="Tandai peminjaman ini selesai?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="selesai" class="btn btn-sm">Selesai</button>
+              </form>
+            <% } else { %>
+              <span class="cell-sub">—</span>
+            <% } %>
+            <% if (isAdmin) { %>
+              <form method="post" action="peminjaman-ruangan" class="inline-form" data-confirm="Hapus data peminjaman ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>
+<script>
+window.toggleRuanganBaru = function () {
+  var sel = document.getElementById('ruanganSelect');
+  var box = document.getElementById('ruanganBaruBox');
+  var inp = document.getElementById('namaRuanganBaru');
+  if (!sel || !box) return;
+  var show = sel.value === '0';
+  box.style.display = show ? 'block' : 'none';
+  if (inp) inp.required = show;
+};
+</script>
+<script>
+/* Auto-refresh ringan: cek tiap 45 detik apakah ada peminjaman ruangan yang baru lewat
+   batas selesai — jika ya, muat ulang halaman agar status berubah jadi "Selesai". */
+(function () {
+  var cek = function () {
+    fetch('<%- url('api/status-peminjaman-ruangan') %>', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d && d.changed > 0) location.reload(); })
+      .catch(function () {});
+  };
+  setInterval(cek, 45000);
+})();
+</script>

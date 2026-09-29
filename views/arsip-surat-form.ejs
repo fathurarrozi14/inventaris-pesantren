@@ -1,0 +1,111 @@
+<%- include('partials/head', { page: 'arsip-surat' }) %>
+
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('arsip-surat') %>">← Kembali ke Arsip</a>
+  <span class="tb-info"><%= surat ? 'Edit surat' : 'Buat surat baru — isi contoh sudah terisi, tinggal sesuaikan' %></span>
+</div>
+
+<form method="post" action="<%- url(surat ? 'arsip-surat/' + surat.id : 'arsip-surat') %>">
+  <%- csrfField %>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Identitas Surat</h2></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Nomor Surat</label>
+        <input type="text" name="nomor" value="<%- e(surat ? surat.nomor : prefillNmr) %>" placeholder="cth: 001/SST/SARPRAS/2026">
+      </div>
+      <div class="field">
+        <label>Tanggal <i>*</i></label>
+        <input type="date" name="tanggal" required value="<%- e(surat ? surat.tanggal : today()) %>">
+      </div>
+      <div class="field field-wide">
+        <label>Tempat Penyerahan</label>
+        <input type="text" name="tempat" value="<%- e(surat ? surat.tempat : 'Kantor Sarana & Prasarana') %>" placeholder="cth: Kantor Sarana & Prasarana">
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Pihak Penyerah &amp; Penerima</h2></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Penyerah — Nama</label>
+        <input type="text" name="penyerah_nama" value="<%- e(surat ? surat.penyerah_nama : 'H. Hasan') %>" placeholder="Nama penyerah">
+      </div>
+      <div class="field">
+        <label>Penyerah — Jabatan</label>
+        <input type="text" name="penyerah_jabatan" value="<%- e(surat ? surat.penyerah_jabatan : 'Kepala Sarana & Prasarana') %>" placeholder="Jabatan penyerah">
+      </div>
+      <div class="field">
+        <label>Penerima — Nama</label>
+        <input type="text" name="penerima_nama" value="<%- e(surat ? surat.penerima_nama : 'Ustadz Ahmad Fauzi') %>" placeholder="Nama penerima">
+      </div>
+      <div class="field">
+        <label>Penerima — Jabatan</label>
+        <input type="text" name="penerima_jabatan" value="<%- e(surat ? surat.penerima_jabatan : 'Koordinator Asrama Putra') %>" placeholder="Jabatan penerima">
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head">
+      <h2>Daftar Barang / Aset</h2>
+      <button type="button" class="btn btn-ghost btn-sm" id="addItemRow">＋ Tambah Barang</button>
+    </div>
+    <datalist id="daftarBarang">
+      <% daftar.forEach(b => { %><option value="<%- b.nama %>"><% }) %>
+    </datalist>
+    <div class="item-rows" id="itemRows">
+      <% items.forEach((it, i) => { %>
+      <div class="item-row">
+        <input type="text" name="items_nama" list="daftarBarang" value="<%- e(it.nama) %>" placeholder="Nama barang / aset">
+        <input type="number" name="items_jumlah" min="1" value="<%- it.jumlah %>" placeholder="Jml">
+        <input type="text" name="items_satuan" value="<%- e(it.satuan || 'unit') %>" placeholder="unit">
+        <input type="text" name="items_keterangan" value="<%- e(it.keterangan) %>" placeholder="Keterangan (opsional)">
+        <button type="button" class="btn btn-sm btn-danger ir-remove" title="Hapus baris" onclick="hapusBaris(this)">✕</button>
+      </div>
+      <% }) %>
+    </div>
+    <p class="hint mt">Ketik nama barang (muncul saran dari inventaris) lalu isi jumlah &amp; satuan.</p>
+  </div>
+
+  <div class="card form-card">
+    <div class="card-head"><h2>Catatan</h2></div>
+    <div class="field field-wide">
+      <textarea name="catatan" rows="3" placeholder="cth: Barang diserahkan dalam kondisi baik dan siap pakai."><%- e(surat ? surat.catatan : 'Barang diserahkan dalam kondisi baik dan siap pakai.') %></textarea>
+    </div>
+  </div>
+
+  <div class="form-actions" style="margin-top:4px">
+    <button type="submit" class="btn"><%= surat ? 'Simpan Perubahan' : 'Simpan Surat' %></button>
+    <a class="btn btn-ghost" href="<%- url('arsip-surat') %>">Batal</a>
+  </div>
+</form>
+
+<script>
+(function () {
+  var rows = document.getElementById('itemRows');
+  var addBtn = document.getElementById('addItemRow');
+  if (!rows || !addBtn) return;
+  function makeRow(values) {
+    var v = values || { nama: '', jumlah: 1, satuan: 'unit', keterangan: '' };
+    var div = document.createElement('div');
+    div.className = 'item-row';
+    div.innerHTML =
+      '<input type="text" name="items_nama" list="daftarBarang" value="' + v.nama + '" placeholder="Nama barang / aset">' +
+      '<input type="number" name="items_jumlah" min="1" value="' + v.jumlah + '" placeholder="Jml">' +
+      '<input type="text" name="items_satuan" value="' + v.satuan + '" placeholder="unit">' +
+      '<input type="text" name="items_keterangan" value="' + v.keterangan + '" placeholder="Keterangan (opsional)">' +
+      '<button type="button" class="btn btn-sm btn-danger ir-remove" title="Hapus baris" onclick="hapusBaris(this)">✕</button>';
+    return div;
+  }
+  addBtn.addEventListener('click', function () { rows.appendChild(makeRow()); });
+  window.hapusBaris = function (btn) {
+    if (rows.querySelectorAll('.item-row').length <= 1) { alert('Minimal satu baris barang.'); return; }
+    btn.closest('.item-row').remove();
+  };
+})();
+</script>
+
+<%- include('partials/foot') %>

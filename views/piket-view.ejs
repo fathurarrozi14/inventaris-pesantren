@@ -1,0 +1,212 @@
+<%- include('partials/head', { page: 'piket' }) %>
+<style>
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+}
+.piket-wrap { width: 100%; }
+.piket-kop { text-align: center; margin-bottom: 10px; }
+.piket-kop h2 { font-size: 27px; letter-spacing: 0.06em; margin: 0; }
+.piket-kop h3 { font-size: 21px; margin: 3px 0; }
+.piket-info { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 10px 0 12px; font-size: 17px; }
+.piket-info b { font-weight: 700; }
+.piket-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.piket-table th, .piket-table td { border: 1.2px solid #444; padding: 6px 8px; vertical-align: top; }
+.piket-table th { background: #f1f0fa; font-size: 13px; }
+.piket-table .p-no { width: 40px; text-align: center; }
+.piket-table .p-jam { width: 130px; white-space: nowrap; }
+.piket-table .p-tugas { min-width: 320px; }
+.piket-table .p-hari { width: 32px; text-align: center; padding: 3px 0; }
+.piket-table td.p-hari input { width: 18px; height: 18px; display: block; margin: 0 auto; }
+.piket-table tr.sub-row td { background: #faf9ff; }
+.piket-table tr.sub-row .p-tugas { padding-left: 22px; color: #333; }
+/* Hari Minggu otomatis merah — kolom penuh dari atas sampai bawah */
+.piket-table th.sun { background: #d33; color: #fff; }
+.piket-table td.sun { background: #d33 !important; }
+/* Tanda "-" di kolom Minggu: kotak putih berisi dash MERAH (terlihat jelas di atas merah) */
+.piket-table td.sun .piket-libur {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #fff;
+  color: #d33;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1;
+}
+.piket-table td.p-hari.sun input { accent-color: #d33; }
+.p-libur-num { display: block; font-size: 15px; font-weight: 800; line-height: 1.1; }
+.p-libur-label { display: block; font-size: 10px; font-weight: 800; line-height: 1.05; margin-top: 2px; letter-spacing: 0.02em; }
+.piket-legend { font-size: 14px; color: var(--ink-mute); margin: 6px 0 10px; }
+.piket-legend .sw { display: inline-block; width: 15px; height: 15px; background: #d33; border-radius: 3px; vertical-align: middle; margin: 0 4px 0 10px; }
+/* Blok tanda tangan di bawah tabel checklist */
+.piket-foot { margin-top: 26px; break-inside: avoid; page-break-inside: avoid; page-break-before: avoid; }
+.piket-note { font-size: 14px; color: #333; margin-bottom: 34px; }
+.piket-ttd { display: flex; justify-content: space-between; gap: 60px; }
+.piket-ttd-blok { width: 45%; text-align: center; }
+.piket-ttd-role { font-size: 15px; font-weight: 700; color: #1F1B3A; margin-bottom: 66px; }
+.piket-ttd-nama { font-size: 16px; font-weight: 800; color: #111; }
+@media print {
+  .piket-scroll { overflow: visible !important; }
+  .piket-table { font-size: 8px; }
+  .piket-table th, .piket-table td { padding: 1.5px 2px; }
+  .piket-table .p-jam { width: 56px; }
+  .piket-table .p-hari { width: 14px; }
+  .piket-table .p-tugas { min-width: 180px; }
+  .piket-table td.p-hari input { width: 10px; height: 10px; }
+  .piket-table td.sun .piket-libur { width: 12px; height: 12px; font-size: 11px; }
+  .piket-kop { margin-bottom: 2px; }
+  .piket-kop h2 { font-size: 15px; }
+  .piket-kop h3 { font-size: 12px; margin: 1px 0; }
+  .piket-info { font-size: 10.5px; margin: 4px 0 5px; gap: 4px; }
+  .piket-legend { font-size: 10px; margin: 2px 0 4px; }
+  .p-libur-num { font-size: 9px; }
+  .p-libur-label { font-size: 6.5px; }
+  .piket-foot { margin-top: 8px; }
+  .piket-note { margin-bottom: 12px; font-size: 10px; }
+  .piket-ttd-role { margin-bottom: 22px; font-size: 10.5px; }
+  .piket-ttd-nama { font-size: 10.5px; }
+}
+</style>
+
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('piket') %>">← Daftar Jadwal Piket</a>
+  <a class="btn btn-ghost" href="<%- url('piket/' + s.id + '/edit') %>">✏️ Edit Info</a>
+  <a class="btn btn-ghost" href="<%- url('piket/' + s.id + '/excel') %>">⬇ Download Excel</a>
+  <button type="button" class="btn" onclick="window.print()">🖨 Cetak / PDF</button>
+  <span class="tb-info"><%= s.nama %> · <%= BLN[+s.bulan.slice(5, 7)] %> <%= s.bulan.slice(0, 4) %> · <%= jmlHari %> hari</span>
+</div>
+
+<div class="piket-wrap">
+  <div class="piket-kop">
+    <h2>JOB DESCRIPTION</h2>
+    <h3>Cleaning Service</h3>
+    <h3>PPTQ SAHABATQU</h3>
+  </div>
+  <div class="piket-info">
+    <span><b>Nama</b> : <%= s.nama %></span>
+    <span><b>Bulan</b> : <%= BLN[+s.bulan.slice(5, 7)] %> <%= s.bulan.slice(0, 4) %></span>
+    <span><b>Area</b> : <%= s.area %></span>
+    <span><b>Hari Libur</b> : <%= s.hari_libur || '—' %></span>
+  </div>
+  <p class="piket-legend"><span class="sw"></span> Hari Minggu</p>
+
+  <form method="post" action="<%- url('piket/' + s.id + '/cek') %>">
+    <%- csrfField %>
+    <div class="piket-scroll" style="overflow-x:auto">
+      <table class="piket-table">
+        <thead>
+          <tr>
+            <th class="p-no">No</th>
+            <th class="p-jam">Jam</th>
+            <th class="p-tugas">Tugas Harian</th>
+            <% for (let d = 1; d <= jmlHari; d++) { %>
+            <th class="p-hari <%= sundays.includes(d) ? 'sun' : '' %>"><% if (sundays.includes(d)) { %><span class="p-libur-num"><%= d %></span><span class="p-libur-label">Hari<br>Libur</span><% } else { %><%= d %><% } %></th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% let nomorPiket = 0; %>
+          <% tasks.forEach((t) => { %>
+          <% if (t.jam) nomorPiket++; %>
+          <tr class="<%= t.jam ? '' : 'sub-row' %>">
+            <td class="p-no"><%= t.jam ? nomorPiket : '' %></td>
+            <td class="p-jam"><%= t.jam || '' %></td>
+            <td class="p-tugas"><%= t.tugas %></td>
+            <% for (let d = 1; d <= jmlHari; d++) { %>
+            <td class="p-hari <%= sundays.includes(d) ? 'sun' : '' %>"><% if (sundays.includes(d)) { %><span class="piket-libur">–</span><% } else { %><input type="checkbox" name="cek_<%= t.id %>_<%= d %>" <%- cmap[t.id + '_' + d] ? 'checked' : '' %>><% } %></td>
+            <% } %>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="no-print form-actions" style="margin-top:12px">
+      <button type="submit" class="btn">💾 Simpan Checklist</button>
+    </div>
+  </form>
+
+  <div class="piket-foot">
+    <p class="piket-note">* dikerjakan sesuai keadaan</p>
+    <div class="piket-ttd">
+      <div class="piket-ttd-blok">
+        <p class="piket-ttd-role">Kordinator Kebersihan</p>
+        <p class="piket-ttd-nama"><strong><%= s.kordinator_kebersihan || 'Ustadz Ahmad Syukri Rohman' %></strong></p>
+      </div>
+      <div class="piket-ttd-blok">
+        <p class="piket-ttd-role">Kordinator K3</p>
+        <p class="piket-ttd-nama"><strong><%= s.kordinator_k3 || 'Ustadz Ahmad Shobirin' %></strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card no-print" style="margin-top:18px">
+    <div class="card-head"><h2>Tambah Tugas</h2></div>
+    <form method="post" action="<%- url('piket/' + s.id + '/tugas') %>" class="form-grid">
+      <%- csrfField %>
+      <div class="field">
+        <label>Jam (opsional, kosongkan utk sub-tugas)</label>
+        <input type="text" name="jam" placeholder="cth: 07.00 - 07.10">
+      </div>
+      <div class="field">
+        <label>Tugas <i>*</i></label>
+        <input type="text" name="tugas" required placeholder="cth: Mengepel ruang kantor">
+      </div>
+      <div class="form-actions field-wide">
+        <button type="submit" class="btn">＋ Tambah Tugas</button>
+      </div>
+    </form>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>No</th><th>Jam</th><th>Tugas</th><th class="th-actions">Aksi</th></tr></thead>
+        <tbody>
+          <% let nomorTugas = 0; %>
+          <% tasks.forEach((t) => { %>
+          <% if (t.jam) nomorTugas++; %>
+          <tr>
+            <td><%= t.jam ? nomorTugas : '—' %></td>
+            <td class="nowrap"><%= t.jam || '—' %></td>
+            <td><%= t.tugas %></td>
+            <td class="table-actions">
+              <button type="button" class="btn btn-sm btn-ghost" onclick="toggleEditTugas(<%= t.id %>)">Edit</button>
+              <form method="post" action="<%- url('piket/' + s.id + '/tugas/' + t.id + '/hapus') %>" class="inline-form" data-confirm="Hapus tugas ini?">
+                <%- csrfField %>
+                <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+              </form>
+            </td>
+          </tr>
+          <tr id="editTugas<%= t.id %>" style="display:none">
+            <td colspan="4">
+              <form method="post" action="<%- url('piket/' + s.id + '/tugas/' + t.id + '/edit') %>" class="form-grid">
+                <%- csrfField %>
+                <div class="field">
+                  <label>Jam</label>
+                  <input type="text" name="jam" value="<%- e(t.jam) %>" placeholder="cth: 07.00 - 07.10">
+                </div>
+                <div class="field">
+                  <label>Tugas <i>*</i></label>
+                  <input type="text" name="tugas" required value="<%- e(t.tugas) %>">
+                </div>
+                <div class="form-actions field-wide">
+                  <button type="submit" class="btn btn-sm">💾 Simpan</button>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditTugas(<%= t.id %>)">Batal</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/foot') %>
+<script>
+window.toggleEditTugas = function (id) {
+  var el = document.getElementById('editTugas' + id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+};
+</script>

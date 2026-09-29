@@ -1,0 +1,115 @@
+<%- include('partials/head', { page: 'mobil' }) %>
+
+<div class="toolbar">
+  <form method="get" action="mobil" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari nama / plat / jenis mobil...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <a class="btn btn-ghost" href="<%- url('peminjaman-mobil') %>">Peminjaman Mobil →</a>
+  <% if (isManageStaff) { %>
+  <button class="btn btn-ghost" id="toggleForm" type="button" data-add-label="+ Tambah Mobil"><%= edit ? 'Tutup Formulir' : '+ Tambah Mobil' %></button>
+  <% } %>
+</div>
+
+<% if (isManageStaff) { %>
+<div class="card form-card" id="mobilForm" <% if (!edit) { %>hidden<% } %>>
+  <div class="card-head">
+    <h2><%= edit ? 'Ubah Data Mobil' : 'Tambah Mobil Baru' %></h2>
+    <% if (edit) { %><a class="link-more" href="mobil">Batal ubah</a><% } %>
+  </div>
+  <form method="post" action="mobil" class="form-grid">
+    <%- csrfField %>
+    <input type="hidden" name="id" value="<%- edit ? edit.id : '' %>">
+    <div class="field">
+      <label>Nama Mobil / Kendaraan <i>*</i></label>
+      <input type="text" name="nama" required value="<%- edit ? e(edit.nama) : '' %>" placeholder="cth: TOYOTA HIACE COMMUTER">
+    </div>
+    <div class="field">
+      <label>Nomor Plat</label>
+      <input type="text" name="plat" value="<%- edit ? e(edit.plat) : '' %>" placeholder="cth: AB 7812 HN">
+    </div>
+    <div class="field">
+      <label>Jenis</label>
+      <input type="text" name="jenis" list="daftarJenisMobil" value="<%- edit ? e(edit.jenis) : '' %>" placeholder="cth: Minibus / Bus / Pickup">
+      <datalist id="daftarJenisMobil">
+        <option value="Bus"></option><option value="Minibus"></option><option value="MPV"></option>
+        <option value="Pickup"></option><option value="Truk"></option><option value="Sepeda Motor"></option>
+      </datalist>
+    </div>
+    <div class="field">
+      <label>Kapasitas (orang)</label>
+      <input type="number" name="kapasitas" min="0" value="<%- edit ? edit.kapasitas : '' %>" placeholder="cth: 14">
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select name="status">
+        <option value="aktif" <%- edit && edit.status === 'aktif' ? 'selected' : (!edit ? 'selected' : '') %>>Aktif (bisa dipinjam)</option>
+        <option value="maintenance" <%- edit && edit.status === 'maintenance' ? 'selected' : '' %>>Maintenance (tidak bisa dipinjam)</option>
+        <option value="nonaktif" <%- edit && edit.status === 'nonaktif' ? 'selected' : '' %>>Nonaktif</option>
+      </select>
+    </div>
+    <div class="field field-wide">
+      <label>Keterangan</label>
+      <input type="text" name="keterangan" value="<%- edit ? e(edit.keterangan) : '' %>" placeholder="cth: Kendaraan operasional pesantren">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="simpan" class="btn"><%= edit ? 'Simpan Perubahan' : 'Simpan Mobil' %></button>
+    </div>
+  </form>
+</div>
+<% } %>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Daftar Mobil</h2>
+    <span class="cell-sub"><%= list.length %> unit — data awal diambil otomatis dari Jadwal Pemeliharaan</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Mobil</th>
+          <th>Plat</th>
+          <th>Jenis</th>
+          <th>Kapasitas</th>
+          <th>Status</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="6" class="empty-cell">Belum ada data mobil. Klik "+ Tambah Mobil" untuk menambahkan.</td></tr>
+        <% } %>
+        <% list.forEach(m => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= m.nama %></div>
+            <% if (m.keterangan) { %><div class="cell-sub"><%= m.keterangan %></div><% } %>
+          </td>
+          <td class="nowrap"><%= m.plat || '—' %></td>
+          <td><%= m.jenis || '—' %></td>
+          <td><%= m.kapasitas ? m.kapasitas + ' orang' : '—' %></td>
+          <td><%- badge(m.statusTampil, 'ruangan') %></td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('peminjaman-mobil') %>?mobil_id=<%= m.id %>">Ajukan</a>
+            <% if (isManageStaff) { %>
+            <a class="btn btn-sm btn-ghost" href="mobil?edit=<%= m.id %>">Edit</a>
+            <% } %>
+            <% if (isAdmin) { %>
+            <form method="post" action="mobil" class="inline-form" data-confirm="Hapus data mobil <%= m.nama %>?">
+              <%- csrfField %>
+              <input type="hidden" name="id" value="<%= m.id %>">
+              <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

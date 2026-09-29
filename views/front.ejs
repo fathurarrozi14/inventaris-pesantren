@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title><%= e(set.hero_title || 'Pesantren SahabatQu') %> — Sistem Inventaris, Peminjaman &amp; Pemeliharaan</title>
+<% if (logoData) { %>
+<link rel="icon" href="<%- url('logo') %>">
+<% } else { %>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366F1'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z'/%3E%3Crect x='8' y='33' width='32' height='4' rx='2' fill='%238B5CF6'/%3E%3Crect x='4' y='38' width='40' height='5' rx='2.5' fill='%236366F1'/%3E%3Crect x='6' y='24' width='3' height='12' rx='1.5' fill='%23E8C46A'/%3E%3Crect x='39' y='24' width='3' height='12' rx='1.5' fill='%23E8C46A'/%3E%3C/svg%3E">
+<% } %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"></noscript>
+<script>
+(function () {
+  // Beranda website didesain gelap (dark navy premium) — default 'dark' walau
+  // perangkat pengguna memilih tema terang. Pilihan manual via tombol 🌙/☀️ tetap dihormati.
+  var s = null;
+  try { s = localStorage.getItem('sq-theme'); } catch (e) {}
+  document.documentElement.setAttribute('data-theme', s || 'dark');
+})();
+</script>
+<link rel="stylesheet" href="style.css?v=18">
+<link rel="icon" type="image/png" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="icon" type="image/png" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<link rel="manifest" href="<%- url('manifest.webmanifest') %>">
+<meta name="theme-color" content="#04081C">
+<link rel="apple-touch-icon" sizes="192x192" href="<%- url('ikon-192.png?v=' + logoVer) %>">
+<link rel="apple-touch-icon" sizes="512x512" href="<%- url('ikon-512.png?v=' + logoVer) %>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SINTAPQU">
+<script src="<%- url('pwa.js?v=6') %>" defer></script>
+</head>
+<%
+/* ---- Data jadwal gabungan (ruangan + mobil) untuk hero & seksi fokus ---- */
+const NAMA_HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const NAMA_BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function chipTanggal(t) {
+  const d = new Date(String(t) + 'T00:00:00');
+  if (isNaN(d.getTime())) return { hari: '', tgl: '--', bulan: '', tahun: '' };
+  return { hari: NAMA_HARI[d.getDay()], tgl: d.getDate(), bulan: NAMA_BULAN[d.getMonth()], tahun: d.getFullYear() };
+}
+const jadwalRuangan = pinjamPublik.map((p) => ({
+  tipe: 'ruangan',
+  nama: p.ruangan_nama,
+  keperluan: p.keperluan,
+  mulai: p.tanggal_mulai,
+  selesai: p.tanggal_selesai,
+  jam1: p.jam_mulai || '08:00',
+  jam2: p.jam_selesai || '17:00',
+  info: p.jumlah_peserta ? p.jumlah_peserta + ' peserta' : '',
+  orang: p.peminjam_tampil,
+  extra: p.bidang_tampil || '',
+  link: 'peminjaman-ruangan'
+}));
+const jadwalMobil = pinjamMobilPublik.map((p) => ({
+  tipe: 'mobil',
+  nama: p.mobil_nama + (p.mobil_plat ? ' · ' + p.mobil_plat : ''),
+  keperluan: p.keperluan,
+  mulai: p.tanggal_mulai,
+  selesai: p.tanggal_selesai,
+  jam1: p.jam_mulai || '08:00',
+  jam2: p.jam_selesai || '17:00',
+  info: p.jumlah_penumpang ? p.jumlah_penumpang + ' penumpang' : '',
+  orang: p.peminjam_tampil,
+  extra: p.mobil_jenis || '',
+  link: 'peminjaman-mobil'
+}));
+const jadwalSemua = jadwalRuangan.concat(jadwalMobil)
+  .sort((a, b) => (a.mulai + a.jam1).localeCompare(b.mulai + b.jam1));
+const jadwalTerdekat = jadwalSemua.slice(0, 3);
+const totalJadwal = jadwalSemua.length;
+%>
+<body class="fx-body">
+<div class="fx-bg" aria-hidden="true">
+  <span class="fx-blob fx-blob-1"></span>
+  <span class="fx-blob fx-blob-2"></span>
+  <span class="fx-blob fx-blob-3"></span>
+  <span class="fx-blob fx-blob-4"></span>
+  <span class="fx-grid"></span>
+</div>
+
+<div class="fx-shell">
+
+<!-- ============ TOP BAR ============ -->
+<header class="fx-topbar">
+  <a class="fx-brand" href="#beranda">
+    <span class="fx-logo">
+      <% if (logoData) { %>
+      <img src="<%- url('logo') %>" alt="Logo Pesantren">
+      <% } else { %>
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path fill="#fff" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z" opacity=".95"/>
+        <rect x="8" y="33" width="32" height="4" rx="2" fill="#fff" opacity=".8"/>
+        <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#fff" opacity=".6"/>
+        <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#F5D98B"/>
+        <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#F5D98B"/>
+      </svg>
+      <% } %>
+    </span>
+    <span class="fx-brand-text">
+      <strong><%= e(set.header_brand || 'Pesantren SahabatQu') %></strong>
+      <span><%= e(set.header_tagline || 'Sistem Inventaris, Peminjaman & Pemeliharaan') %></span>
+    </span>
+  </a>
+  <div class="fx-top-actions">
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Ganti tema terang/gelap" title="Ganti tema terang/gelap">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <% if (u) { %>
+    <a class="fx-icon-btn" href="index" title="Dashboard" aria-label="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/></svg>
+    </a>
+    <a class="fx-btn sm ghost" href="logout">Keluar</a>
+    <% } else { %>
+    <a class="fx-btn sm" href="login"><%= e(set.btn_login || 'Masuk') %></a>
+    <% } %>
+  </div>
+</header>
+
+<main class="fx-main">
+
+  <!-- ============ HERO ============ -->
+  <section class="fx-hero" id="beranda">
+    <div class="fx-hero-grid">
+      <div class="fx-hero-left">
+        <% if (set.hero_badge) { %><span class="fx-hero-badge">✦ <%= e(set.hero_badge) %></span><% } %>
+        <p class="fx-bismillah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+        <h1><%= e(set.hero_title || 'Pesantren SahabatQu') %></h1>
+        <% if (set.hero_sub) { %><p class="fx-hero-sub"><%= e(set.hero_sub) %></p><% } %>
+        <div class="fx-cta">
+          <% if (u) { %>
+          <a class="fx-btn" href="index">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/></svg>
+            Buka Dashboard
+          </a>
+          <% } else { %>
+          <a class="fx-btn" href="login">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <%= e(set.btn_login || 'Masuk ke Sistem Inventaris') %>
+          </a>
+          <a class="fx-btn ghost" href="register"><%= e(set.btn_register || 'Daftar Akun Baru') %></a>
+          <% } %>
+        </div>
+
+        <form class="fx-search" method="get" action="" id="cariJadwal" role="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" name="q" id="cariJadwalInput" value="<%= cari %>"
+                 placeholder="Cari jadwal — ruangan, mobil, kegiatan, atau nama peminjam"
+                 aria-label="Cari jadwal peminjaman" autocomplete="off">
+          <button type="button" class="fx-search-clear" id="cariJadwalClear" aria-label="Hapus pencarian" title="Hapus pencarian" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+          </button>
+          <button type="submit" class="fx-btn sm">Cari</button>
+        </form>
+        <p class="fx-search-note" id="cariJadwalNote"<%= cari ? '' : ' hidden' %>><% if (cari) { %><% if (jumlahCari === 0) { %>Tidak ada jadwal yang cocok dengan &ldquo;<%= cari %>&rdquo;.<% } else { %><strong><%= jumlahCari %></strong> jadwal cocok dengan &ldquo;<%= cari %>&rdquo; — <a href="#jadwal">lihat daftarnya</a><% } %><% } %></p>
+        <p class="fx-search-hint">Butuh cek kode stiker barang? <a href="scan-qr">Scan QR / cek kode</a> · <a href="inventaris">daftar inventaris</a></p>
+
+        <div class="fx-quick">
+          <a class="fx-chip" href="scan-qr">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+            Scan QR
+          </a>
+          <a class="fx-chip" href="peminjaman-ruangan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Pinjam Ruangan
+          </a>
+          <a class="fx-chip" href="peminjaman-mobil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5L7.6 5h8.8L18 9.5V17"/><path d="M6 9.5h12"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg>
+            Pinjam Mobil
+          </a>
+          <% if (waMaint) { %>
+          <a class="fx-chip" href="https://wa.me/<%= waMaint %>?text=<%= encodeURIComponent('Assalamualaikum, saya ingin melaporkan kerusakan / pemeliharaan fasilitas.') %>" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Lapor Kerusakan
+          </a>
+          <% } else { %>
+          <a class="fx-chip" href="#maintenance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Pemeliharaan
+          </a>
+          <% } %>
+        </div>
+        <% if (set.hero_note) { %><p class="fx-hero-note"><%= e(set.hero_note) %></p><% } %>
+      </div>
+
+      <aside class="fx-hero-right">
+        <div class="fx-glass">
+          <div class="fx-glass-head">
+            <span class="fx-dot"></span>
+            <h3>Jadwal Terdekat</h3>
+            <span class="fx-count"><%= totalJadwal %> jadwal aktif</span>
+          </div>
+          <% if (jadwalTerdekat.length === 0) { %>
+          <div class="fx-empty"><%= cari ? 'Tidak ada jadwal yang cocok dengan pencarian.' : 'Belum ada jadwal peminjaman yang disetujui.' %></div>
+          <% } else { %>
+          <div class="fx-mini-list">
+            <% jadwalTerdekat.forEach(j => { const c = chipTanggal(j.mulai); %>
+            <div class="fx-mini">
+              <span class="fx-mini-date"><b><%= c.tgl %></b><i><%= c.bulan %></i></span>
+              <span class="fx-mini-body">
+                <strong><%= j.nama %></strong>
+                <span class="fx-mini-keperluan"><%= j.keperluan || '—' %></span>
+                <span><%= j.jam1 %>–<%= j.jam2 %> WIB · <%= j.tipe === 'mobil' ? 'Mobil' : 'Ruangan' %> · <%= j.orang %></span>
+              </span>
+            </div>
+            <% }) %>
+          </div>
+          <% } %>
+          <a class="fx-link" href="#jadwal">Lihat semua jadwal →</a>
+        </div>
+        <% if (set.hero_image) { %>
+        <div class="fx-hero-photo"><img src="<%- e(set.hero_image) %>" alt="Foto pesantren" loading="lazy" decoding="async"></div>
+        <% } %>
+      </aside>
+    </div>
+
+  </section>
+
+  <!-- ============ JADWAL PEMINJAMAN (fokus utama) ============ -->
+  <section class="fx-section" id="jadwal">
+    <div class="fx-section-head">
+      <div>
+        <span class="fx-eyebrow">Fokus Utama</span>
+        <h2 class="fx-h2">Jadwal Peminjaman</h2>
+        <p class="fx-sub">Peminjaman ruangan &amp; kendaraan yang sudah disetujui, diurutkan dari tanggal terdekat — terbuka untuk umum.</p>
+      </div>
+      <div class="fx-tabs" role="tablist" aria-label="Pilih jenis jadwal">
+        <button type="button" class="fx-tab is-on" data-fx-tab="ruangan" role="tab" aria-selected="true">
+          Ruangan <span class="n"><%= jadwalRuangan.length %></span>
+        </button>
+        <button type="button" class="fx-tab" data-fx-tab="mobil" role="tab" aria-selected="false">
+          Mobil <span class="n"><%= jadwalMobil.length %></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="fx-panel" data-fx-panel="ruangan">
+      <% if (jadwalRuangan.length === 0) { %>
+      <div class="fx-empty"><%= cari ? 'Tidak ada jadwal ruangan yang cocok dengan pencarian.' : 'Belum ada jadwal peminjaman ruangan saat ini.' %></div>
+      <% } else { %>
+      <div class="fx-empty fx-cari-empty" hidden>Tidak ada jadwal ruangan yang cocok dengan pencarian.</div>
+      <div class="fx-sched-grid">
+        <% jadwalRuangan.forEach(j => { const c = chipTanggal(j.mulai); %>
+        <article class="fx-sched">
+          <span class="fx-sched-date"><b><%= c.tgl %></b><i><%= c.bulan %></i><u><%= c.hari %> <%= c.tahun %></u></span>
+          <div class="fx-sched-main">
+            <div class="fx-sched-top">
+              <span class="fx-sched-name"><%= j.nama %></span>
+              <span class="fx-tag ruang">Ruangan</span>
+            </div>
+            <p class="fx-sched-keperluan"><%= j.keperluan %></p>
+            <div class="fx-sched-meta">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><%= fmtDateShort(j.mulai) %> – <%= fmtDateShort(j.selesai) %></span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><%= j.jam1 %>–<%= j.jam2 %> WIB</span>
+              <% if (j.info) { %>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><%= j.info %></span>
+              <% } %>
+            </div>
+            <div class="fx-sched-org">👤 Peminjam: <strong><%= j.orang %></strong><% if (j.extra) { %> · <%= j.extra %><% } %></div>
+          </div>
+        </article>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+
+    <div class="fx-panel" data-fx-panel="mobil" hidden>
+      <% if (jadwalMobil.length === 0) { %>
+      <div class="fx-empty"><%= cari ? 'Tidak ada jadwal mobil yang cocok dengan pencarian.' : 'Belum ada jadwal peminjaman mobil saat ini.' %></div>
+      <% } else { %>
+      <div class="fx-empty fx-cari-empty" hidden>Tidak ada jadwal mobil yang cocok dengan pencarian.</div>
+      <div class="fx-sched-grid">
+        <% jadwalMobil.forEach(j => { const c = chipTanggal(j.mulai); %>
+        <article class="fx-sched">
+          <span class="fx-sched-date mobil"><b><%= c.tgl %></b><i><%= c.bulan %></i><u><%= c.hari %> <%= c.tahun %></u></span>
+          <div class="fx-sched-main">
+            <div class="fx-sched-top">
+              <span class="fx-sched-name"><%= j.nama %></span>
+              <span class="fx-tag mobil">Mobil</span>
+            </div>
+            <p class="fx-sched-keperluan"><%= j.keperluan %></p>
+            <div class="fx-sched-meta">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><%= fmtDateShort(j.mulai) %> – <%= fmtDateShort(j.selesai) %></span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><%= j.jam1 %>–<%= j.jam2 %> WIB</span>
+              <% if (j.info) { %>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><%= j.info %></span>
+              <% } %>
+            </div>
+            <div class="fx-sched-org">👤 Peminjam: <strong><%= j.orang %></strong><% if (j.extra) { %> · <%= j.extra %><% } %></div>
+          </div>
+        </article>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+
+    <div class="fx-quick" style="margin-top:22px">
+      <a class="fx-chip" href="peminjaman-ruangan">＋ Ajukan Pinjam Ruangan</a>
+      <a class="fx-chip" href="peminjaman-mobil">＋ Ajukan Pinjam Mobil</a>
+      <a class="fx-chip" href="peminjaman-barang">＋ Ajukan Pinjam Barang</a>
+    </div>
+  </section>
+
+  <!-- ============ PEMELIHARAAN ============ -->
+  <section class="fx-section" id="maintenance">
+    <span class="fx-eyebrow">Status Fasilitas</span>
+    <h2 class="fx-h2"><%= e(set.title_maintenance || 'Pemeliharaan Sedang Berjalan') %></h2>
+    <p class="fx-sub"><%= e(set.sub_maintenance || 'Fasilitas yang sedang dalam perawatan. Perkembangan lengkap dapat dipantau setelah masuk.') %></p>
+    <% if (maint.length === 0) { %>
+    <div class="fx-empty" style="margin-top:22px">Alhamdulillah, saat ini tidak ada fasilitas dalam pemeliharaan.</div>
+    <% } else { %>
+    <div class="fx-maint-grid">
+      <% maint.forEach(m => { %>
+      <article class="fx-maint">
+        <div class="fx-maint-top">
+          <span class="fx-maint-name"><%= m.objek_nama %></span>
+          <span class="kat kat-<%= m.kategori %>"><%= kategoriLabel(m.kategori) %></span>
+        </div>
+        <p class="fx-maint-judul"><%= m.judul %></p>
+        <div class="fx-maint-meta">
+          <span class="lvl lvl-<%= m.tingkat %>"><%= m.tingkat %></span>
+          <%- badge(m.status, 'maintenance') %>
+          <span>sejak <%= fmtDateShort(m.tanggal_lapor) %></span>
+        </div>
+        <% if (m.penanggung_jawab) { %><div class="fx-maint-org">🛠️ PIC: <strong><%= m.penanggung_jawab %></strong></div><% } %>
+        <% if (m.pelapor_nama) { %><div class="fx-maint-org">👤 Pelapor: <strong><%= m.pelapor_nama %></strong></div><% } %>
+      </article>
+      <% }) %>
+    </div>
+    <% } %>
+  </section>
+
+  <!-- ============ INVENTARIS ============ -->
+  <section class="fx-section" id="inventaris">
+    <span class="fx-eyebrow">Data Inventaris</span>
+    <h2 class="fx-h2"><%= e(set.title_inventaris || 'Info Inventaris') %></h2>
+    <p class="fx-sub"><%= e(set.sub_inventaris || 'Ringkasan inventaris Pesantren SahabatQu saat ini.') %></p>
+    <div class="fx-tiles">
+      <button type="button" class="fx-tile stat-once" onclick="lihatJumlah(this)">
+        <span class="fx-tile-ico t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.1"/></svg></span>
+        <b><%= stats.barangJenis %></b>
+        <span>Jenis Barang</span>
+        <small>klik 1× untuk lihat rincian jumlah</small>
+      </button>
+      <button type="button" class="fx-tile stat-once" onclick="lihatJumlah(this)">
+        <span class="fx-tile-ico t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 4.5-9 4.5-9-4.5z"/><path d="m3 11.5 9 4.5 9-4.5"/><path d="m3 16.5 9 4.5 9-4.5"/></svg></span>
+        <b><%= stats.stokTotal.toLocaleString('id-ID') %></b>
+        <span>Total Stok</span>
+        <small>klik 1× untuk lihat rincian jumlah</small>
+      </button>
+      <button type="button" class="fx-tile stat-once" onclick="lihatJumlah(this)">
+        <span class="fx-tile-ico t3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V6a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v15"/><path d="M15 11h4a1 1 0 0 1 1 1v9"/><path d="M2 21h20"/><path d="M8 9h3M8 13h3M8 17h3M18 15v.01M18 18v.01"/></svg></span>
+        <b><%= stats.ruangan %></b>
+        <span>Ruangan Terdaftar</span>
+        <small>masjid · aula · kelas · asrama</small>
+      </button>
+      <button type="button" class="fx-tile stat-once" onclick="lihatJumlah(this)">
+        <span class="fx-tile-ico t4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.65a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.06 4.65a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.35 9v.09a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.88z"/></svg></span>
+        <b><%= stats.maintBerjalan %></b>
+        <span>Pemeliharaan Berjalan</span>
+        <small><%= stats.maintSelesai %> selesai</small>
+      </button>
+    </div>
+  </section>
+
+  <% if (set.about_title || set.about_text) { %>
+  <section class="fx-section" id="profil">
+    <span class="fx-eyebrow">Tentang Kami</span>
+    <h2 class="fx-h2"><%= e(set.about_title || 'Profil Pesantren SahabatQu') %></h2>
+    <% if (set.about_text) { %><p class="fx-sub"><%= e(set.about_text) %></p><% } %>
+  </section>
+  <% } %>
+
+  <!-- ============ KONTAK ============ -->
+  <section class="fx-section" id="kontak">
+    <span class="fx-eyebrow">Hubungi Kami</span>
+    <h2 class="fx-h2"><%= e(set.title_kontak || 'Kontak & Layanan') %></h2>
+    <p class="fx-sub"><%= e(set.sub_kontak || 'Hubungi bagian Sarana & Prasarana untuk kebutuhan fasilitas.') %></p>
+    <div class="fx-kontak-grid kontak-size-<%= e(set.kontak_size || 'medium') %>">
+      <div class="fx-kontak">
+        <span class="fx-kontak-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <div><strong>Alamat</strong><p><%= kontak.alamat %></p></div>
+      </div>
+      <div class="fx-kontak">
+        <span class="fx-kontak-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+        <div><strong>Telepon / WA</strong><p><%= kontak.telepon %></p></div>
+      </div>
+      <div class="fx-kontak">
+        <span class="fx-kontak-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+        <div><strong>Email</strong><p><%= kontak.email %></p></div>
+      </div>
+      <div class="fx-kontak">
+        <span class="fx-kontak-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        <div><strong>Jam Layanan</strong><p><%= kontak.jam %></p></div>
+      </div>
+    </div>
+    <p class="fx-sub" style="margin-top:20px">
+      <% if (u) { %>Ajukan peminjaman atau lapor kerusakan dari dashboard Anda — <a href="index">Buka Dashboard</a>.
+      <% } else { %>Lapor kerusakan atau ajukan peminjaman dengan akun Anda — <a href="login">Masuk</a> atau <a href="register">Daftar Baru</a>.<% } %>
+    </p>
+  </section>
+
+  <section class="fx-band">
+    <div>
+      <h2><%= e(set.cta_title || 'Kelola Inventaris & Pemeliharaan Pesantren') %></h2>
+      <p><%= e(set.cta_sub || 'Masuk ke sistem untuk mengajukan peminjaman, melapor kerusakan, memantau pemeliharaan, dan mencetak laporan.') %></p>
+    </div>
+    <div class="fx-band-btns">
+      <% if (u) { %>
+      <a class="fx-btn" href="index">Buka Dashboard →</a>
+      <a class="fx-btn ghost" href="logout">Keluar</a>
+      <% } else { %>
+      <a class="fx-btn" href="login">Masuk ke Login Inventaris →</a>
+      <a class="fx-btn ghost" href="register">Daftar Baru</a>
+      <% } %>
+    </div>
+  </section>
+
+  <footer class="fx-footer">
+    <p><%= e(set.footer_text || ('© ' + new Date().getFullYear() + ' Pesantren SahabatQu — Sarana & Prasarana')) %></p>
+    <p style="margin-top:8px">
+      <% if (u) { %><a href="index">Dashboard</a> · <a href="logout">Keluar</a>
+      <% } else { %><a href="login">Masuk</a> · <a href="register">Daftar</a><% } %>
+    </p>
+  </footer>
+</main>
+</div><!-- /.fx-shell -->
+
+<% if (waMaint) { %>
+<div class="wa-float-wrap-maint">
+  <span class="wa-float-label">Konfirmasi Pemeliharaan</span>
+  <a class="wa-float wa-float-maint" href="https://wa.me/<%= waMaint %>?text=<%= encodeURIComponent('Assalamualaikum, saya ingin melaporkan kerusakan / pemeliharaan fasilitas.') %>" target="_blank" rel="noopener" aria-label="<%= e(waMaintLabel) %>" title="<%= e(waMaintLabel) %> — WhatsApp">
+    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.6.8 5 2.2 7L4 29l7.2-2.1c1.5.8 3.1 1.1 4.8 1.1 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.5 0-3-.4-4.3-1.1l-.3-.2-4.3 1.3 1.3-4.2-.2-.3c-1-1.6-1.5-3.3-1.5-5.1 0-5.2 4.2-9.4 9.3-9.4 5.2 0 9.4 4.2 9.4 9.4s-4.3 9.6-9.4 9.6zm5.2-7.2c-.3-.1-1.7-.8-2-1-.3-.1-.5-.1-.7.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.6 0-.1-.7-1.7-1-2.3-.2-.7-.5-.6-.7-.6h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.4z"/></svg>
+  </a>
+</div>
+<% } %>
+
+<% if (wa) { %>
+<div class="wa-wrap">
+  <div class="wa-pop" id="waPop">
+    <div class="wa-pop-head">Hubungi Kami</div>
+    <a class="wa-opt" href="https://wa.me/<%= wa %>?text=<%= encodeURIComponent(set.wa_pesan || 'Assalamualaikum, saya ingin bertanya.') %>" target="_blank" rel="noopener">
+      <strong><%= e(set.wa_label1 || 'Sarana & Prasarana') %></strong>
+      <span><%= e(wa1Label) %></span>
+    </a>
+    <% if (wa2) { %>
+    <a class="wa-opt" href="https://wa.me/<%= wa2 %>?text=<%= encodeURIComponent(set.wa_pesan || 'Assalamualaikum, saya ingin bertanya.') %>" target="_blank" rel="noopener">
+      <strong><%= e(set.wa_label2 || 'Kantor Pesantren') %></strong>
+      <span><%= e(wa2Label) %></span>
+    </a>
+    <% } %>
+  </div>
+  <span class="wa-float-label wa-float-label-main">Konfirmasi Peminjaman</span>
+  <button type="button" class="wa-float" id="waBtn" aria-label="Hubungi via WhatsApp" title="Chat WhatsApp">
+    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.6.8 5 2.2 7L4 29l7.2-2.1c1.5.8 3.1 1.1 4.8 1.1 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.5 0-3-.4-4.3-1.1l-.3-.2-4.3 1.3 1.3-4.2-.2-.3c-1-1.6-1.5-3.3-1.5-5.1 0-5.2 4.2-9.4 9.3-9.4 5.2 0 9.4 4.2 9.4 9.4s-4.3 9.6-9.4 9.6zm5.2-7.2c-.3-.1-1.7-.8-2-1-.3-.1-.5-.1-.7.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.6 0-.1-.7-1.7-1-2.3-.2-.7-.5-.6-.7-.6h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.4z"/></svg>
+  </button>
+</div>
+<% } %>
+
+<!-- ============ DOCK MENU BAWAH (gaya aplikasi) ============ -->
+<nav class="fx-dock" aria-label="Menu website">
+  <a class="fx-dock-item is-on" href="#beranda" data-fx-nav="beranda">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Beranda</span>
+  </a>
+  <a class="fx-dock-item" href="#jadwal" data-fx-nav="jadwal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Jadwal</span>
+  </a>
+  <button type="button" class="fx-dock-fab" id="fxFab" aria-label="Ajukan peminjaman" title="Ajukan peminjaman">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <a class="fx-dock-item" href="#inventaris" data-fx-nav="inventaris">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    <span>Inventaris</span>
+  </a>
+  <a class="fx-dock-item" href="#kontak" data-fx-nav="kontak">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    <span>Kontak</span>
+  </a>
+</nav>
+
+<!-- Bottom sheet: pilih jenis peminjaman -->
+<div class="fx-sheet" id="fxSheet">
+  <div class="fx-sheet-box">
+    <div class="fx-sheet-head">
+      <h3>Ajukan Peminjaman</h3>
+      <button type="button" id="fxSheetClose" aria-label="Tutup">✕</button>
+    </div>
+    <a class="fx-sheet-opt" href="peminjaman-ruangan">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <span><strong>Pinjam Ruangan</strong><small>Masjid, aula, kelas, asrama &amp; lainnya</small></span>
+    </a>
+    <a class="fx-sheet-opt" href="peminjaman-mobil">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5L7.6 5h8.8L18 9.5V17"/><path d="M6 9.5h12"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg></span>
+      <span><strong>Pinjam Mobil</strong><small>Kendaraan operasional pesantren</small></span>
+    </a>
+    <a class="fx-sheet-opt" href="peminjaman-barang">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8"/><path d="M3.29 7L12 2l8.71 5"/></svg></span>
+      <span><strong>Pinjam Barang</strong><small>Proyektor, sound system, meja &amp; lainnya</small></span>
+    </a>
+  </div>
+</div>
+
+<!-- Modal rincian jumlah inventaris (muncul sekali klik) -->
+<div class="modal-overlay" id="modalInventaris" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Rincian Jumlah Inventaris</h3>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="tutupJumlah()">✕ Tutup</button>
+    </div>
+    <table class="modal-table">
+      <thead><tr><th>Kategori</th><th>Jenis</th><th>Total</th><th>Tersedia</th></tr></thead>
+      <tbody>
+        <% breakdown.forEach(b => { %>
+        <tr>
+          <td><%= b.kategori || 'Tanpa Kategori' %></td>
+          <td><%= b.jenis %></td>
+          <td><%= b.total.toLocaleString('id-ID') %></td>
+          <td><%= b.tersedia.toLocaleString('id-ID') %></td>
+        </tr>
+        <% }) %>
+        <tr class="modal-total">
+          <td><strong>Total</strong></td>
+          <td><strong><%= stats.barangJenis %></strong></td>
+          <td><strong><%= stats.stokTotal.toLocaleString('id-ID') %></strong></td>
+          <td><strong><%= stats.stokTersedia ? stats.stokTersedia.toLocaleString('id-ID') : '—' %></strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="cell-sub" style="margin-top:10px">Ruangan terdaftar: <strong><%= stats.ruangan %></strong> · Pemeliharaan berjalan: <strong><%= stats.maintBerjalan %></strong></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---------- Tema terang/gelap ----------
+  var toggle = document.getElementById('themeToggle');
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('sq-theme', next); } catch (e) {}
+    });
+  }
+
+  // ---------- Tombol WhatsApp: 2 pilihan nomor ----------
+  var waBtn = document.getElementById('waBtn');
+  var waPop = document.getElementById('waPop');
+  if (waBtn && waPop) {
+    waBtn.addEventListener('click', function (e) { e.stopPropagation(); waPop.classList.toggle('open'); });
+    document.addEventListener('click', function () { waPop.classList.remove('open'); });
+  }
+
+  // ---------- Bismillah: disesuaikan dengan judul hero ----------
+  // Dihitung dari lebar teks sesungguhnya (bukan angka tetap) supaya tetap pas
+  // walau judul hero diubah admin lewat "Halaman Website" atau lebar layar berbeda.
+  //
+  // PENTING: huruf Amiri (dengan harakat) tingginya ~1,95x ukuran font, sedangkan
+  // judul Latin hanya ~0,85x. Jadi menyamakan LEBAR 100% membuat tulisan Arab
+  // tampak ~3x lebih tinggi dari judul (terlalu besar). Karena itu:
+  //   LEBAR_JUDUL     = berapa persen lebar judul yang mau disamai (0.70 = 70%)
+  //   BATAS_TINGGI    = tinggi tulisan maksimal, dihitung dari tinggi visual judul
+  // Ubah dua angka ini saja kalau ingin lebih besar/kecil.
+  var LEBAR_JUDUL = 0.70;
+  var BATAS_TINGGI = 2.6;
+  (function () {
+    var bi = document.querySelector('.fx-bismillah');
+    var h1 = document.querySelector('.fx-hero h1');
+    if (!bi || !h1) return;
+
+    function lebarTeks(el) {
+      var rg = document.createRange();
+      rg.selectNodeContents(el);
+      var rects = rg.getClientRects(), maks = 0;
+      for (var i = 0; i < rects.length; i++) if (rects[i].width > maks) maks = rects[i].width;
+      return maks;
+    }
+    // tinggi "tinta" huruf asli (tanpa ruang kosong baris) / ukuran font
+    function rasioTinggi(el) {
+      var c = document.createElement('canvas'), x = c.getContext('2d');
+      var cs = getComputedStyle(el);
+      x.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      var m = x.measureText(el.textContent.trim() || 'A');
+      return (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) / parseFloat(cs.fontSize) || 0.85;
+    }
+
+    function pas() {
+      bi.style.fontSize = '';                      // kembali ke ukuran dasar dari CSS
+      var dasar = parseFloat(getComputedStyle(bi).fontSize);
+      if (!dasar) return;
+      var wBi = lebarTeks(bi), wH1 = lebarTeks(h1);
+      if (!wBi || !wH1) return;
+      // batas 1: lebar tidak melebihi LEBAR_JUDUL x lebar judul
+      var olehLebar = dasar * (wH1 * LEBAR_JUDUL / wBi);
+      // batas 2: tinggi huruf tidak melebihi BATAS_TINGGI x tinggi huruf judul
+      var h1Font = parseFloat(getComputedStyle(h1).fontSize);
+      var rb = rasioTinggi(bi), rh = rasioTinggi(h1);
+      var olehTinggi = (rh * h1Font * BATAS_TINGGI) / rb;
+      var target = Math.min(olehLebar, olehTinggi);
+      var maks = dasar * (bi.clientWidth / wBi) * 0.995; // jangan sampai meluber / pindah baris
+      target = Math.max(15, Math.min(target, maks, 140));
+      if (target < dasar) target = dasar;          // jangan sampai lebih kecil dari ukuran dasar
+      bi.style.fontSize = target.toFixed(2) + 'px';
+    }
+
+    // Ukuran huruf asli baru diketahui setelah webfont (Amiri/Jakarta) selesai
+    // dimuat — Google Fonts di sini dimuat non-blocking, jadi dihitung ulang
+    // saat font siap + beberapa kali sebagai jaring pengaman.
+    pas();
+    [150, 600, 1800, 3500].forEach(function (ms) { setTimeout(pas, ms); });
+    if (document.fonts) {
+      if (document.fonts.ready) document.fonts.ready.then(pas);
+      if (document.fonts.addEventListener) {
+        document.fonts.addEventListener('loadingdone', pas);
+        document.fonts.addEventListener('loadingerror', pas);
+      }
+    }
+    window.addEventListener('load', pas);
+    var t = null;
+    window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(pas, 120); });
+  })();
+
+  // ---------- Pencarian jadwal peminjaman (filter langsung tanpa muat ulang) ----------
+  // Kotak pencarian di hero menyaring kartu jadwal (ruangan & mobil) menurut nama
+  // ruangan/mobil, keperluan, nama peminjam, bidang, dan tanggal. Tanpa JS, form
+  // tetap mengirim ?q= ke server (hasil sama, halaman dimuat ulang).
+  (function () {
+    var form = document.getElementById('cariJadwal');
+    var input = document.getElementById('cariJadwalInput');
+    var clear = document.getElementById('cariJadwalClear');
+    var note = document.getElementById('cariJadwalNote');
+    if (!form || !input) return;
+    var panels = document.querySelectorAll('[data-fx-panel]');
+    var tabs = document.querySelectorAll('[data-fx-tab]');
+
+    function tampilkanPanel(kunci) {
+      panels.forEach(function (p) { p.hidden = p.getAttribute('data-fx-panel') !== kunci; });
+      tabs.forEach(function (t) {
+        var on = t.getAttribute('data-fx-tab') === kunci;
+        t.classList.toggle('is-on', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+    }
+
+    function terapkan() {
+      var teks = input.value.trim();
+      var q = teks.toLowerCase();
+      if (clear) clear.hidden = teks === '';
+      var jumlah = {}, total = 0;
+      panels.forEach(function (p) {
+        var kunci = p.getAttribute('data-fx-panel'), n = 0;
+        p.querySelectorAll('.fx-sched').forEach(function (kartu) {
+          var cocok = q === '' || kartu.textContent.toLowerCase().indexOf(q) !== -1;
+          kartu.hidden = !cocok;
+          if (cocok) n++;
+        });
+        jumlah[kunci] = n;
+        total += n;
+        var kosong = p.querySelector('.fx-cari-empty');
+        if (kosong) kosong.hidden = !(q !== '' && n === 0);
+      });
+      tabs.forEach(function (t) {
+        var s = t.querySelector('.n'), k = t.getAttribute('data-fx-tab');
+        if (s && jumlah[k] !== undefined) s.textContent = jumlah[k];
+      });
+      // kalau tab yang sedang aktif jadi kosong, pindah ke tab yang ada isinya
+      if (q !== '') {
+        var aktif = document.querySelector('.fx-tab.is-on');
+        var ka = aktif ? aktif.getAttribute('data-fx-tab') : 'ruangan';
+        if (jumlah[ka] === 0) {
+          var lain = Object.keys(jumlah).filter(function (k) { return jumlah[k] > 0; })[0];
+          if (lain) tampilkanPanel(lain);
+        } else {
+          tampilkanPanel(ka);
+        }
+      }
+      if (note) {
+        note.textContent = '';
+        if (teks === '') { note.hidden = true; return; }
+        note.hidden = false;
+        if (total === 0) {
+          note.textContent = 'Tidak ada jadwal yang cocok dengan “' + teks + '”.';
+        } else {
+          var b = document.createElement('strong'); b.textContent = total;
+          note.appendChild(b);
+          note.appendChild(document.createTextNode(' jadwal cocok dengan “' + teks + '” — '));
+          var a = document.createElement('a'); a.href = '#jadwal'; a.textContent = 'lihat daftarnya';
+          note.appendChild(a);
+        }
+      }
+    }
+
+    input.addEventListener('input', terapkan);
+    input.addEventListener('search', terapkan);           // tombol ✕ bawaan input search
+    form.addEventListener('submit', function (e) {        // JS aktif: cukup saring di tempat
+      e.preventDefault();
+      terapkan();
+      var sasaran = document.getElementById('jadwal');
+      if (sasaran && input.value.trim() !== '') sasaran.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    if (clear) clear.addEventListener('click', function () {
+      input.value = '';
+      terapkan();
+      input.focus();
+    });
+    terapkan();
+  })();
+
+  // ---------- Tab jadwal: Ruangan / Mobil ----------
+  var tabs = document.querySelectorAll('[data-fx-tab]');
+  var panels = document.querySelectorAll('[data-fx-panel]');
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var kunci = tab.getAttribute('data-fx-tab');
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.classList.toggle('is-on', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach(function (p) { p.hidden = p.getAttribute('data-fx-panel') !== kunci; });
+    });
+  });
+
+  // ---------- Bottom sheet peminjaman ----------
+  var fab = document.getElementById('fxFab');
+  var sheet = document.getElementById('fxSheet');
+  var sheetClose = document.getElementById('fxSheetClose');
+  function tutupSheet() { if (sheet) sheet.classList.remove('open'); }
+  if (fab && sheet) {
+    fab.addEventListener('click', function () { sheet.classList.toggle('open'); });
+    sheet.addEventListener('click', function (e) { if (e.target === sheet) tutupSheet(); });
+  }
+  if (sheetClose) sheetClose.addEventListener('click', tutupSheet);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') tutupSheet(); });
+
+  // ---------- Dock: tandai menu aktif sesuai bagian yang terlihat ----------
+  var items = document.querySelectorAll('[data-fx-nav]');
+  var bagian = ['beranda', 'jadwal', 'inventaris', 'kontak'];
+  function aktifkan(id) {
+    items.forEach(function (it) { it.classList.toggle('is-on', it.getAttribute('data-fx-nav') === id); });
+  }
+  if ('IntersectionObserver' in window) {
+    var terlihat = {};
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) terlihat[en.target.id] = en.intersectionRatio;
+        else delete terlihat[en.target.id];
+      });
+      var terpilih = null, maks = 0;
+      bagian.forEach(function (id) {
+        if ((terlihat[id] || 0) > maks) { maks = terlihat[id]; terpilih = id; }
+      });
+      if (terpilih) aktifkan(terpilih);
+    }, { threshold: [0.15, 0.4, 0.75], rootMargin: '-10% 0px -25% 0px' });
+    bagian.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+  }
+})();
+
+/* Info Inventaris: sekali klik menampilkan rincian jumlah, setelah itu nonaktif */
+var modalInventaris = document.getElementById('modalInventaris');
+window.lihatJumlah = function (el) {
+  if (!el || el.classList.contains('seen')) return; // hanya 1x klik
+  document.querySelectorAll('.stat-once').forEach(function (c) { c.classList.add('seen'); });
+  el.classList.remove('seen');
+  if (modalInventaris) modalInventaris.hidden = false;
+};
+window.tutupJumlah = function () { if (modalInventaris) modalInventaris.hidden = true; };
+if (modalInventaris) {
+  modalInventaris.addEventListener('click', function (e) { if (e.target === modalInventaris) modalInventaris.hidden = true; });
+}
+</script>
+</body>
+</html>

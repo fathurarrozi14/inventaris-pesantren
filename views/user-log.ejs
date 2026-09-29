@@ -1,0 +1,38 @@
+<%- include('partials/head', { page: 'users' }) %>
+
+<div class="toolbar">
+  <a class="btn btn-ghost" href="<%- url('users') %>">← Kembali ke Pengguna</a>
+  <span class="tb-info">Log aktivitas <strong><%= user.nama %></strong> (@<%= user.username %>) — waktu login, keluar, dan perangkat.</span>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Aksi</th>
+          <th>Perangkat</th>
+          <th>Browser · OS</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (logs.length === 0) { %>
+        <tr><td colspan="5" class="empty-cell">Belum ada catatan aktivitas untuk pengguna ini.</td></tr>
+        <% } %>
+        <% logs.forEach(a => { %>
+        <tr>
+          <td class="nowrap"><%= fmtDate(a.waktu.slice(0, 10)) %><br><span class="cell-sub"><%= a.waktu.slice(11, 16) %> WIB</span></td>
+          <td><span class="lvl lvl-<%= a.aksi === 'login' ? 'ringan' : (a.aksi === 'logout' ? 'sedang' : 'berat') %>"><%= a.aksi %></span></td>
+          <td><%= a.device %> <span class="cell-sub">📱 bila HP</span></td>
+          <td><%= a.browser %> · <%= a.os %></td>
+          <td class="nowrap"><%= a.ip || '—' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

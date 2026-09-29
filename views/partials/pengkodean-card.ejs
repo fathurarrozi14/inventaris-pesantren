@@ -1,0 +1,22 @@
+<% /* Panduan Pengkodean Aset — dipakai di menu Barang & Ruangan.
+       Variabel yang dipakai: pengkodean (res.locals), kodeAset, subNama. */ %>
+<details class="card pengkodean-card">
+  <summary>📖 Panduan Pengkodean Aset <span class="cell-sub">(Golongan · Bidang · Sub)</span></summary>
+  <div class="pk-intro">
+    <p>Format kode aset: <strong>Golongan</strong> (2 digit) <strong>· Bidang</strong> (2 digit) <strong>· Sub</strong> (huruf).<br>
+      Contoh: <span class="kode-chip">02.01.B</span> = Bangunan · Deresan · SD SahabatQu.</p>
+    <div class="pk-golongan">
+      <% pengkodean.golongan.forEach(g => { %><span class="chip"><strong><%= g.kode %></strong> <%= g.nama %></span><% }) %>
+    </div>
+  </div>
+  <div class="pengkodean-grid">
+    <% pengkodean.bidang.forEach(b => { %>
+    <div class="pk-bidang">
+      <h4><span class="pk-bid-kode"><%= b.kode %></span> <%= b.nama %></h4>
+      <ul>
+        <% b.sub.forEach(s => { %><li><strong><%= s.kode %></strong> <%= s.nama %></li><% }) %>
+      </ul>
+    </div>
+    <% }) %>
+  </div>
+</details>

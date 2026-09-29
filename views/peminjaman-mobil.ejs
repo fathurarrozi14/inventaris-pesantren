@@ -1,0 +1,245 @@
+<%- include('partials/head', { page: 'peminjaman-mobil' }) %>
+
+<% const TABS = [['', 'Semua'], ['pending', 'Menunggu'], ['disetujui', 'Disetujui'], ['ditolak', 'Ditolak'], ['selesai', 'Selesai'], ['dibatalkan', 'Dibatalkan']]; %>
+
+<div class="toolbar">
+  <form method="get" action="peminjaman-mobil" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari mobil / plat / keperluan / peminjam...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <% if (isManageStaff) { %>
+  <a class="btn btn-ghost" href="<%- url('peminjaman-mobil/cetak') %>">🖨 Cetak / PDF</a>
+  <a class="btn btn-ghost" href="<%- url('peminjaman-mobil/excel') %>">⬇ Excel (CSV)</a>
+  <% } %>
+  <% if (isManageStaff) { %>
+  <a class="btn btn-ghost" href="<%- url('mobil') %>">Data Mobil →</a>
+  <% } %>
+</div>
+
+<!-- ============ DAFTAR MOBIL (kartu) — klik mobil untuk mengajukan ============ -->
+<section class="pub-section" style="margin-bottom:22px">
+  <h2 style="font-size:18px;font-weight:800">Pilih Mobil</h2>
+  <p class="pub-sub" style="margin-bottom:14px">Klik salah satu mobil di bawah untuk mengajukan peminjaman.</p>
+  <div class="mobil-grid">
+    <% mobils.forEach(m => { %>
+    <a class="card mobil-card <%- m.statusAsli === 'aktif' ? '' : 'mobil-off' %>"
+       href="<%- url('peminjaman-mobil') %>?mobil_id=<%= m.id %>#formPeminjaman">
+      <div class="mobil-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5L7.6 5h8.8L18 9.5V17"/><path d="M6 9.5h12"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg>
+      </div>
+      <div class="mobil-body">
+        <strong><%= m.nama %></strong>
+        <span class="cell-sub"><%= m.plat || 'tanpa plat' %><% if (m.jenis) { %> · <%= m.jenis %><% } %><% if (m.kapasitas) { %> · <%= m.kapasitas %> orang<% } %></span>
+        <%- badge(m.status, 'ruangan') %>
+      </div>
+    </a>
+    <% }) %>
+    <% if (mobils.length === 0) { %>
+    <p class="empty" style="grid-column:1/-1">Belum ada data mobil. <%= isManageStaff ? 'Tambahkan lewat menu Data Mobil.' : 'Hubungi bagian sarana & prasarana.' %></p>
+    <% } %>
+  </div>
+</section>
+
+<!-- ============ INFO WAJIB: KONFIRMASI WHATSAPP DULU ============ -->
+<div class="card wa-mobil-info" id="infoPeminjamanMobil">
+  <div class="card-head">
+    <h2>📱 Langkah 1 — Konfirmasi WhatsApp Dulu</h2>
+  </div>
+  <p class="wa-mobil-lead">
+    Sebelum mengisi formulir peminjaman mobil, <strong>hubungi bagian Sarana &amp; Prasarana lewat WhatsApp</strong> untuk menanyakan ketersediaan unit dan keperluan kegiatan.
+    Setelah dikonfirmasi, isi formulir di bawah — pengajuan berstatus <strong>Menunggu</strong> dan baru <strong>disetujui admin</strong> setelah konfirmasi.
+  </p>
+  <div class="wa-mobil-actions">
+    <a class="btn wa-mobil-btn" target="_blank" rel="noopener"
+       href="https://wa.me/<%= waMobil.link %>?text=<%= encodeURIComponent(waMobil.pesan) %>">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:18px;height:18px"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.5 6.5 0 0 1-1.9-1.2 7.2 7.2 0 0 1-1.3-1.7c-.1-.2 0-.4.1-.5l.5-.6c.1-.2.1-.3 0-.5l-.8-1.9c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.5 11.5 0 0 0 4.4 3.9 5.2 5.2 0 0 0 3.2.5 2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3z"/></svg>
+      Chat WhatsApp <%= e(waMobil.label) %>
+    </a>
+    <span class="wa-mobil-num"><%= e(waMobil.label) %></span>
+  </div>
+  <ol class="wa-mobil-steps">
+    <li><strong>Chat WhatsApp</strong> ke nomor di atas — sebutkan tanggal, jam, jumlah penumpang &amp; keperluan.</li>
+    <li><strong>Isi formulir</strong> peminjaman mobil di bawah ini.</li>
+    <li><strong>Menunggu persetujuan admin</strong> (status: Menunggu → Disetujui). Pastikan WhatsApp sudah dikonfirmasi agar cepat diproses.</li>
+  </ol>
+</div>
+
+<!-- ============ FORM PENGAJUAN ============ -->
+<div class="card form-card" id="formPeminjaman">
+  <div class="card-head">
+    <h2><%= edit ? 'Edit Peminjaman Mobil #' + edit.id : 'Ajukan Peminjaman Mobil' %></h2>
+    <% if (edit) { %><a class="link-more" href="peminjaman-mobil">Batal edit</a><% } %>
+  </div>
+
+  <% if (mobilJadwal && mobilJadwal.length) { %>
+  <div class="room-busy-notice">
+    <strong>⚠️ Mobil ini sudah dipinjam (disetujui) — periksa jadwal berikut sebelum mengajukan:</strong>
+    <ul>
+      <% mobilJadwal.forEach(j => { %>
+      <li><%= fmtDateShort(j.tanggal_mulai) %> – <%= fmtDateShort(j.tanggal_selesai) %> · <%= j.jam_mulai || '08:00' %>–<%= j.jam_selesai || '17:00' %> WIB · oleh <b><%= j.peminjam_tampil %></b> (<%= j.keperluan %>)</li>
+      <% }) %>
+    </ul>
+  </div>
+  <% } %>
+
+  <form method="post" action="<%- url(edit ? 'peminjaman-mobil/' + edit.id : 'peminjaman-mobil') %>" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Mobil <i>*</i></label>
+      <select name="mobil_id" required id="mobilSelect">
+        <option value="">— Pilih Mobil —</option>
+        <% mobils.forEach(m => { const bisa = m.statusAsli === 'aktif'; %>
+        <option value="<%= m.id %>" <%- (edit ? edit.mobil_id : preselect) === m.id ? 'selected' : '' %> <%- bisa ? '' : 'disabled' %>><%= m.nama %><% if (m.plat) { %> (<%= m.plat %>)<% } %><% if (!bisa) { %> — <%= m.statusAsli === 'maintenance' ? 'maintenance' : 'nonaktif' %><% } else if (m.status === 'dipakai') { %> — sedang dipakai hari ini<% } %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Keperluan <i>*</i></label>
+      <input type="text" name="keperluan" required placeholder="cth: Pengambilan barang / Kegiatan luar" value="<%- edit ? e(edit.keperluan) : '' %>">
+    </div>
+    <div class="field">
+      <label>Nama Peminjam <i>*</i></label>
+      <input type="text" name="nama_peminjam" required placeholder="cth: Ustadz Ahmad" value="<%- edit ? e(edit.nama_peminjam || '') : e(u.nama) %>">
+    </div>
+    <div class="field">
+      <label>Nomor Telepon / WhatsApp <i>*</i></label>
+      <input type="text" name="nomor_peminjam" required placeholder="cth: 0856 4183 8302" value="<%- edit ? e(edit.nomor_peminjam) : '' %>">
+    </div>
+    <div class="field">
+      <label>Jumlah Penumpang</label>
+      <input type="number" name="jumlah_penumpang" min="0" value="<%- edit && edit.jumlah_penumpang ? edit.jumlah_penumpang : '' %>" placeholder="cth: 8">
+    </div>
+    <% if (edit && isManageStaff) { %>
+    <div class="field">
+      <label>Status Peminjaman</label>
+      <select name="status">
+        <option value="pending" <%- edit.status === 'pending' ? 'selected' : '' %>>Menunggu</option>
+        <option value="disetujui" <%- edit.status === 'disetujui' ? 'selected' : '' %>>Disetujui</option>
+        <option value="ditolak" <%- edit.status === 'ditolak' ? 'selected' : '' %>>Ditolak</option>
+        <option value="selesai" <%- edit.status === 'selesai' ? 'selected' : '' %>>Selesai</option>
+        <option value="dibatalkan" <%- edit.status === 'dibatalkan' ? 'selected' : '' %>>Dibatalkan</option>
+      </select>
+      <p class="hint">Ubah status (mis. kembalikan ke <strong>Menunggu</strong> untuk diproses ulang).</p>
+    </div>
+    <% } %>
+    <div class="field">
+      <label>Mulai — Tanggal &amp; Jam <i>*</i></label>
+      <div class="dt-row">
+        <input type="date" name="tanggal_mulai" required value="<%- edit ? edit.tanggal_mulai : today() %>">
+        <input type="time" name="jam_mulai" required value="<%- edit ? edit.jam_mulai : '08:00' %>">
+      </div>
+    </div>
+    <div class="field">
+      <label>Selesai — Tanggal &amp; Jam <i>*</i></label>
+      <div class="dt-row">
+        <input type="date" name="tanggal_selesai" required value="<%- edit ? edit.tanggal_selesai : today() %>">
+        <input type="time" name="jam_selesai" required value="<%- edit ? edit.jam_selesai : '17:00' %>">
+      </div>
+    </div>
+    <div class="field field-wide">
+      <label>Catatan (opsional)</label>
+      <input type="text" name="catatan" placeholder="Keterangan tambahan untuk petugas" value="<%- edit ? e(edit.catatan) : '' %>">
+    </div>
+    <% if (!edit) { %>
+    <div class="field field-wide wa-mobil-check">
+      <label class="wa-mobil-check-label">
+        <input type="checkbox" name="wa_konfirmasi" value="1" required>
+        <span>Saya <strong>sudah chat WhatsApp</strong> ke <strong><%= e(waMobil.label) %></strong> dan sudah mendapat info ketersediaan mobil. <i>*</i></span>
+      </label>
+      <p class="hint">Pengajuan hanya dapat dikirim setelah dicentang — admin menyetujui setelah konfirmasi WhatsApp diterima. Belum chat? <a href="#infoPeminjamanMobil">lihat langkahnya di atas</a>.</p>
+    </div>
+    <% } %>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="ajukan" class="btn"><%= edit ? 'Simpan Perubahan' : 'Kirim Pengajuan' %></button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ DAFTAR PENGAJUAN ============ -->
+<div class="tabs">
+  <% TABS.forEach(([val, label]) => { %>
+  <a class="<%- filter === val ? 'active' : '' %>" href="peminjaman-mobil<%- val ? '?status=' + val : '' %>"><%= label %></a>
+  <% }) %>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Mobil</th>
+          <th>Peminjam</th>
+          <th>No. Telepon/WA</th>
+          <th>Penumpang</th>
+          <th>Keperluan</th>
+          <th>Waktu</th>
+          <th>Status</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="8" class="empty-cell">Tidak ada data pada filter ini.</td></tr>
+        <% } %>
+        <% list.forEach(r => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= r.mobil_nama %></div>
+            <div class="cell-sub"><%= r.mobil_plat || 'tanpa plat' %><% if (r.mobil_jenis) { %> · <%= r.mobil_jenis %><% } %><% if (r.catatan) { %> · Catatan: <%= r.catatan %><% } %></div>
+          </td>
+          <td>
+            <div class="cell-main"><%= r.nama_peminjam || r.peminjam_nama %></div>
+            <div class="cell-sub">@<%= r.peminjam_username %></div>
+            <% if (r.wa_konfirmasi) { %><span class="wa-tag ok">✓ WA dikonfirmasi</span>
+            <% } else { %><span class="wa-tag no">⚠ belum konfirmasi WA</span><% } %>
+          </td>
+          <td><%= r.nomor_peminjam || '—' %></td>
+          <td><%= r.jumlah_penumpang ? r.jumlah_penumpang + ' orang' : '—' %></td>
+          <td><%= r.keperluan %></td>
+          <td class="nowrap">
+            <%= fmtDateShort(r.tanggal_mulai) %> – <%= fmtDateShort(r.tanggal_selesai) %>
+            <br><span class="cell-sub"><%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %> WIB</span>
+          </td>
+          <td><%- badge(r.status, 'ruangan') %></td>
+          <td class="table-actions">
+            <% if (isManageStaff || (['pending','ditolak'].includes(r.status) && u.id === r.peminjam_id)) { %>
+              <a class="btn btn-sm btn-ghost" href="<%- url('peminjaman-mobil') %>?edit=<%= r.id %>">Edit</a>
+            <% } %>
+            <% if (r.status === 'pending' && isManageStaff) { %>
+              <form method="post" action="peminjaman-mobil" class="inline-form"<% if (!r.wa_konfirmasi) { %> data-confirm="Pengaju BELUM mencentang konfirmasi WhatsApp. Pastikan sudah chat ke nomor info sebelum menyetujui. Tetap setujui?"<% } %>>
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="setujui" class="btn btn-sm">Setujui</button>
+              </form>
+              <form method="post" action="peminjaman-mobil" class="inline-form reject-form">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <input type="text" name="catatan" placeholder="Alasan (opsional)" class="input-mini">
+                <button type="submit" name="_aksi" value="tolak" class="btn btn-sm btn-danger">Tolak</button>
+              </form>
+            <% } else if (r.status === 'pending' && u.id === r.peminjam_id) { %>
+              <form method="post" action="peminjaman-mobil" class="inline-form" data-confirm="Batalkan pengajuan ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="batalkan" class="btn btn-sm btn-ghost">Batalkan</button>
+              </form>
+            <% } else if (r.status === 'disetujui' && isManageStaff) { %>
+              <form method="post" action="peminjaman-mobil" class="inline-form" data-confirm="Tandai peminjaman mobil ini selesai?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="selesai" class="btn btn-sm">Selesai</button>
+              </form>
+            <% } %>
+            <% if (isAdmin) { %>
+              <form method="post" action="peminjaman-mobil" class="inline-form" data-confirm="Hapus data peminjaman mobil ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

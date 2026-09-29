@@ -1,0 +1,62 @@
+<%- include('partials/head', { page: 'arsip-surat' }) %>
+
+<div class="toolbar">
+  <form method="get" action="arsip-surat" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari nomor surat / pihak / tempat...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <a class="btn" href="<%- url('arsip-surat/baru') %>">＋ Buat Surat Baru (dari Contoh)</a>
+</div>
+
+<% if (list.length === 0) { %>
+<div class="card"><p class="empty">Belum ada surat. Klik "Buat Surat Baru (dari Contoh)" untuk membuat surat pertama dengan isi contoh yang tinggal diedit.</p></div>
+<% } else { %>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nomor Surat</th>
+          <th>Tanggal</th>
+          <th>Penyerah</th>
+          <th>Penerima</th>
+          <th>Jumlah Item</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% list.forEach(s => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= s.nomor || '—' %></div>
+            <div class="cell-sub"><%= s.tempat %></div>
+          </td>
+          <td class="nowrap"><%= fmtDate(s.tanggal) %></td>
+          <td>
+            <div class="cell-main"><%= s.penyerah_nama || '—' %></div>
+            <div class="cell-sub"><%= s.penyerah_jabatan %></div>
+          </td>
+          <td>
+            <div class="cell-main"><%= s.penerima_nama || '—' %></div>
+            <div class="cell-sub"><%= s.penerima_jabatan %></div>
+          </td>
+          <td><%= s.jml_item %> barang</td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('arsip-surat/' + s.id) %>">Lihat / Cetak</a>
+            <a class="btn btn-sm btn-ghost" href="<%- url('arsip-surat/' + s.id + '/edit') %>">Edit</a>
+            <form method="post" action="<%- url('arsip-surat/' + s.id + '/hapus') %>" class="inline-form" data-confirm="Hapus surat <%= s.nomor || 'ini' %> dari arsip?">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } %>
+
+<%- include('partials/foot') %>

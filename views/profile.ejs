@@ -1,0 +1,61 @@
+<%- include('partials/head', { page: 'profile' }) %>
+
+<div class="detail-grid">
+  <div class="card detail-main">
+    <div class="card-head"><h2>Informasi Akun</h2></div>
+    <div class="profile-hero">
+      <div class="avatar avatar-lg"><%= u.nama.charAt(0).toUpperCase() %></div>
+      <div>
+        <h3><%= u.nama %></h3>
+        <p>@<%= u.username %> · <span class="role-pill role-<%= u.role %>"><%= roleLabel(u.role) %></span></p>
+      </div>
+    </div>
+    <div class="meta-grid">
+      <div class="meta"><span>Username</span><strong>@<%= u.username %></strong></div>
+      <div class="meta"><span>Peran</span><strong><%= roleLabel(u.role) %></strong></div>
+      <div class="meta"><span>Hak Akses</span><strong>
+        <% if (u.role === 'admin') { %>Kelola seluruh sistem
+        <% } else if (u.role === 'operator') { %>Kelola peminjaman &amp; maintenance
+        <% } else { %>Mengajukan peminjaman &amp; laporan<% } %>
+      </strong></div>
+    </div>
+  </div>
+
+  <div class="card detail-side">
+    <div class="card-head"><h2>Ubah Nama</h2></div>
+    <form method="post" action="profile" class="stack-form">
+      <%- csrfField %>
+      <input type="hidden" name="_aksi" value="nama">
+      <div class="field">
+        <label>Nama Lengkap</label>
+        <input type="text" name="nama" value="<%- u.nama %>" required>
+      </div>
+      <button type="submit" class="btn btn-block">Simpan Nama</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>Ganti Password</h2></div>
+  <form method="post" action="profile" class="form-grid narrow">
+    <%- csrfField %>
+    <input type="hidden" name="_aksi" value="password">
+    <div class="field">
+      <label>Password Lama <i>*</i></label>
+      <input type="password" name="password_lama" required autocomplete="current-password">
+    </div>
+    <div class="field">
+      <label>Password Baru <i>*</i></label>
+      <input type="password" name="password_baru" required minlength="6" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Konfirmasi Password Baru <i>*</i></label>
+      <input type="password" name="password_konfirmasi" required minlength="6" autocomplete="new-password">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn">Ganti Password</button>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

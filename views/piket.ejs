@@ -1,0 +1,81 @@
+<%- include('partials/head', { page: 'piket' }) %>
+
+<div class="toolbar">
+  <span class="tb-info">Jadwal Piket Cleaning Service — job description harian dengan checklist tanggal.</span>
+</div>
+
+<div class="card form-card">
+  <div class="card-head"><h2>Buat Jadwal Piket Baru</h2></div>
+  <form method="post" action="piket" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Nama Petugas <i>*</i></label>
+      <input type="text" name="nama" required placeholder="cth: Pak Domo">
+    </div>
+    <div class="field">
+      <label>Area <i>*</i></label>
+      <input type="text" name="area" required placeholder="cth: Pengambilan dan Pemilahan Sampah">
+    </div>
+    <div class="field">
+      <label>Bulan <i>*</i> (pilih dari kalender)</label>
+      <input type="month" name="bulan" required value="<%= tahun %>-<%= String(bulanKe).padStart(2, '0') %>">
+    </div>
+    <div class="field">
+      <label>Hari Libur</label>
+      <input type="text" name="hari_libur" placeholder="cth: Minggu">
+    </div>
+    <div class="field">
+      <label>Kordinator Kebersihan</label>
+      <input type="text" name="kordinator_kebersihan" value="Ustadz Ahmad Syukri Rohman">
+    </div>
+    <div class="field">
+      <label>Kordinator K3</label>
+      <input type="text" name="kordinator_k3" value="Ustadz Ahmad Shobirin">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn">Buat Jadwal (dengan contoh tugas)</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Bulan</th>
+          <th>Area</th>
+          <th>Hari Libur</th>
+          <th>Jumlah Tugas</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="6" class="empty-cell">Belum ada jadwal piket. Buat jadwal baru di atas.</td></tr>
+        <% } %>
+        <% list.forEach(s => { %>
+        <tr>
+          <td><div class="cell-main"><%= s.nama %></div></td>
+          <td class="nowrap"><%= BLN[+s.bulan.slice(5, 7)] %> <%= s.bulan.slice(0, 4) %></td>
+          <td><%= s.area %></td>
+          <td><%= s.hari_libur || '—' %></td>
+          <td><%= s.jml %></td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('piket/' + s.id) %>">Buka / Checklist</a>
+            <a class="btn btn-sm btn-ghost" href="<%- url('piket/' + s.id + '/edit') %>">Edit</a>
+            <a class="btn btn-sm btn-ghost" href="<%- url('piket/' + s.id + '/excel') %>">Excel</a>
+            <form method="post" action="<%- url('piket/' + s.id + '/hapus') %>" class="inline-form" data-confirm="Hapus jadwal piket <%= s.nama %>?">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

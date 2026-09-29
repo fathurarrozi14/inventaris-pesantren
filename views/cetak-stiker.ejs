@@ -1,0 +1,140 @@
+<%- include('partials/head', { page: 'cetak-stiker' }) %>
+
+<div class="toolbar">
+  <form method="get" action="cetak-stiker" class="search-box">
+    <input type="search" name="q" value="<%- e(q) %>" placeholder="<%= tipe === 'ruangan' ? 'Cari ruangan / lokasi...' : 'Cari barang / kategori / lokasi...' %>">
+    <% if (tipe === 'ruangan') { %><input type="hidden" name="tipe" value="ruangan"><% } %>
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <span class="tb-info">Centang yang akan dibuat stiker, lalu klik Cetak Stiker.</span>
+</div>
+
+<div class="tabs" style="margin-bottom:14px">
+  <a class="<%- tipe !== 'ruangan' ? 'active' : '' %>" href="cetak-stiker">Stiker Barang</a>
+  <a class="<%- tipe === 'ruangan' ? 'active' : '' %>" href="cetak-stiker?tipe=ruangan">Stiker Ruangan</a>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Contoh Format Stiker</h2>
+    <span class="cell-sub">Ukuran stiker ± 62 × 34 mm — inilah format yang akan dicetak (QR mengarah ke halaman detail barang/ruangan).</span>
+  </div>
+  <div class="stiker-example-wrap">
+    <div class="sticker stiker-example">
+      <div class="stk-top">
+        <% if (logoData) { %>
+        <img class="stk-logo" src="<%- logoData %>" alt="Logo">
+        <% } else { %>
+        <svg class="stk-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="stlge" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#8B5CF6"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#stlge)" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+          <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+          <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+          <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+          <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+        </svg>
+        <% } %>
+        <div class="stk-head">PESANTREN<br>SAHABATQU</div>
+      </div>
+      <div class="stk-qr">
+        <svg viewBox="0 0 40 40" fill="none" style="width:26mm;height:26mm" aria-hidden="true">
+          <path fill="#111" d="M2 2h10v10H2zM28 2h10v10H28zM2 28h10v10H2zM28 28h10v10H28zM14 2h2v10h-2zM18 2h2v10h-2zM24 2h2v10h-2zM14 14h2v2h-2zM18 14h4v2h-4zM24 14h2v2h-2zM26 16h2v2h-2zM28 16h2v6h-2zM14 18h2v2h-2zM18 18h2v4h-2zM22 18h4v2h-4zM28 24h2v2h-2zM14 22h2v2h-2zM16 26h4v2h-4zM22 24h2v4h-2zM26 28h4v2h-4zM30 30h2v2h-2zM32 22h2v4h-2zM32 28h4v4h-4zM34 20h2v2h-2zM36 16h2v2h-2zM4 12h2v14H4zM6 26h2v2H6zM8 28h2v2H8zM10 30h2v2h-2zM12 12h2v2h-2zM14 12h2v2h-2z"/>
+        </svg>
+        <span class="stk-qr-hint">Scan → kode aset</span>
+      </div>
+      <div class="stk-name" style="font-size:5mm;margin:0.6mm 0"><%= tipe === 'ruangan' ? 'Aula Serbaguna' : 'Proyektor' %></div>
+      <div class="stk-code"><%= tipe === 'ruangan' ? '0202A Aula Serbaguna 082026 01' : '0303A Proyektor 082026 01' %></div>
+      <div class="stk-sub"><%= tipe === 'ruangan' ? '02 Bangunan · Gedung A' : 'Elektronik · Lab Komputer' %></div>
+    </div>
+  </div>
+</div>
+
+<form method="get" action="cetak-stiker/cetak" id="stikerForm">
+  <% if (tipe === 'ruangan') { %><input type="hidden" name="tipe" value="ruangan"><% } %>
+  <div class="card">
+    <div class="card-head">
+      <h2><%= tipe === 'ruangan' ? 'Pilih Ruangan' : 'Pilih Barang' %></h2>
+      <div class="table-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="pilihSemua">Pilih Semua</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="bersihkan">Bersihkan</button>
+        <label class="stk-jml-label">Salinan per stiker
+          <input type="number" name="jml" min="1" max="99" value="1" class="input-mini">
+        </label>
+        <button type="submit" class="btn btn-sm">Cetak Stiker</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <% if (tipe === 'ruangan') { %>
+          <tr><th style="width:44px">Pilih</th><th>Ruangan</th><th style="width:130px">Golongan</th><th style="width:120px">Bidang</th><th style="width:150px">Lokasi</th><th style="width:130px">Kode Stiker</th><th class="th-actions" style="width:90px">Aksi</th></tr>
+          <% } else { %>
+          <tr><th style="width:44px">Pilih</th><th>Barang</th><th style="width:130px">Kategori</th><th style="width:150px">Lokasi</th><th style="width:130px">Kode Stiker</th><th class="th-actions" style="width:90px">Aksi</th></tr>
+          <% } %>
+        </thead>
+        <tbody>
+          <% if (items.length === 0) { %>
+          <tr><td colspan="<%= tipe === 'ruangan' ? 7 : 6 %>" class="empty-cell">Tidak ada data ditemukan.</td></tr>
+          <% } %>
+          <% items.forEach(b => { %>
+          <tr>
+            <td><input type="checkbox" name="ids" value="<%= b.id %>" class="stk-check"></td>
+            <% if (tipe === 'ruangan') { %>
+            <td>
+              <div class="cell-main"><%= b.nama %></div>
+              <% if (b.deskripsi) { %><div class="cell-sub"><%= b.deskripsi %></div><% } %>
+            </td>
+            <td><%= b.golongan || '—' %></td>
+            <td><%= b.bidang_aset || '—' %></td>
+            <td><%= b.lokasi || '—' %></td>
+            <td>
+              <div class="cell-main"><span class="stk-kode-tag"><%= kodeStikerTampil(b, b.id, tipe) %></span></div>
+              <div class="cell-sub"><%= kodeAset(b.golongan, b.bidang_aset, b.kode_aset) ? 'Kode Aset: ' + kodeAset(b.golongan, b.bidang_aset, b.kode_aset) : kodeStikerRuangan(b.id) %></div>
+            </td>
+            <% } else { %>
+            <td>
+              <div class="cell-main"><%= b.nama %></div>
+              <% if (b.deskripsi) { %><div class="cell-sub"><%= b.deskripsi %></div><% } %>
+            </td>
+            <td><%= b.kategori || '—' %></td>
+            <td><%= b.lokasi || '—' %></td>
+            <td>
+              <div class="cell-main"><span class="stk-kode-tag"><%= kodeStikerTampil(b, b.id, tipe) %></span></div>
+              <div class="cell-sub"><%= kodeAset(b.golongan, b.bidang_aset, b.kode_aset) ? 'Kode Aset: ' + kodeAset(b.golongan, b.bidang_aset, b.kode_aset) : kodeStiker(b.id) %></div>
+            </td>
+            <% } %>
+            <td class="table-actions">
+              <a class="btn btn-sm btn-ghost" href="<%- url(tipe === 'ruangan' ? 'ruangan' : 'barang') %>?edit=<%= b.id %>">Edit</a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</form>
+
+<script>
+(function () {
+  var form = document.getElementById('stikerForm');
+  if (!form) return;
+  var checks = function () { return form.querySelectorAll('input.stk-check'); };
+  var pilihSemua = document.getElementById('pilihSemua');
+  var bersihkan = document.getElementById('bersihkan');
+  if (pilihSemua) pilihSemua.addEventListener('click', function () { checks().forEach(function (c) { c.checked = true; }); });
+  if (bersihkan) bersihkan.addEventListener('click', function () { checks().forEach(function (c) { c.checked = false; }); });
+  form.addEventListener('submit', function (e) {
+    var any = false;
+    checks().forEach(function (c) { if (c.checked) any = true; });
+    if (!any) { e.preventDefault(); alert('Pilih minimal satu barang untuk dicetak.'); }
+  });
+})();
+</script>
+
+<%- include('partials/foot') %>

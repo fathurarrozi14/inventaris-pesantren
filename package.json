@@ -1,0 +1,21 @@
+{
+  "name": "inventaris-pesantren",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "12.9.0",
+    "compression": "^1.8.1",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "jimp": "^0.22.12",
+    "jsqr": "^1.4.0",
+    "multer": "^2.2.0",
+    "qrcode": "^1.5.4",
+    "xlsx": "^0.18.5"
+  }
+}

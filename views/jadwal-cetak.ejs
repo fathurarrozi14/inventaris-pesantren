@@ -1,0 +1,69 @@
+<%- include('partials/head', { page: 'pemeliharaan/jadwal' }) %>
+<%
+const BLN = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const tglIndo = (t) => { const p = String(t).split('-'); return p.length === 3 ? p[2] + ' ' + BLN[Number(p[1])] + ' ' + p[0] : t; };
+%>
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('pemeliharaan/jadwal') %>">← Kembali</a>
+  <button type="button" class="btn" onclick="window.print()">🖨 Cetak / Simpan PDF</button>
+</div>
+
+<div class="print-header">
+  <% if (logoData) { %>
+  <img class="ph-logo ph-logo-img" src="<%- logoData %>" alt="Logo">
+  <% } else { %>
+  <svg class="ph-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path fill="#6366F1" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+    <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+    <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+    <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+    <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+  </svg>
+  <% } %>
+  <div class="ph-text">
+    <h2>PESANTREN SAHABATQU</h2>
+    <p>Bagian Sarana &amp; Prasarana · Sistem Inventaris</p>
+    <h3>Jadwal Pemeliharaan — Servis / Perbaikan, Pajak Tahunan &amp; Pajak 5 Tahunan</h3>
+    <span class="ph-date">Per <%= fmtDate(today()) %> · Dicetak <%= fmtDate(today()) %> oleh <%= u.nama %></span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>No</th><th>Kendaraan / Objek</th><th>Jenis Jadwal</th><th>Tanggal</th><th>Keterangan</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="6" class="empty-cell">Belum ada jadwal.</td></tr>
+        <% } %>
+        <% list.forEach((j, i) => { %>
+        <% const sisa = Math.round((Date.parse(j.tanggal) - Date.parse(today())) / 86400000); %>
+        <tr>
+          <td><%= i + 1 %></td>
+          <td><strong><%= j.objek_nama %></strong></td>
+          <td><%= (j.jenis_list || j.jenis).split(',').filter(Boolean).map(x => jenisLabel[x] || x).join(', ') %></td>
+          <td class="nowrap"><%= tglIndo(j.tanggal) %></td>
+          <td><%= j.keterangan || '—' %></td>
+          <td><%= j.status === 'selesai' ? 'Selesai' : (sisa < 0 ? 'Terlambat' : 'Akan Datang') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="signature print-only">
+  <div class="sig-block">
+    <p class="sig-role">Dicetak oleh,</p>
+    <p class="sig-name"><strong><%= u.nama %></strong></p>
+    <p class="sig-sub"><%= roleLabel(u.role) %> · Pesantren SahabatQu</p>
+  </div>
+  <div class="sig-block">
+    <p class="sig-role">Mengetahui,<br>Kepala Sarana &amp; Prasarana</p>
+    <p class="sig-name">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</p>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

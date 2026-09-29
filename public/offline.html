@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Tidak Ada Koneksi — SINTAPQU</title>
+<meta name="theme-color" content="#4F46E5">
+<style>
+  :root { --ink:#EEF2FF; --ink-soft:#D5DBF9; --indigo:#6366F1; --violet:#8B5CF6; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    font-family:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; color:var(--ink);
+    background:linear-gradient(160deg,#0A1638 0%,#202A6E 35%,#3B2A85 70%,#5B2FA0 100%);
+  }
+  .box {
+    width:100%; max-width:420px; text-align:center; padding:34px 28px; border-radius:20px;
+    background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.16);
+    box-shadow:0 18px 40px rgba(2,6,23,0.35); backdrop-filter:blur(20px) saturate(170%);
+  }
+  .icon {
+    width:64px; height:64px; margin:0 auto 16px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--indigo),var(--violet)); box-shadow:0 10px 26px rgba(99,102,241,0.45);
+  }
+  h1 { font-size:20px; font-weight:800; margin-bottom:8px; }
+  p { color:var(--ink-soft); font-size:14px; line-height:1.6; margin-bottom:18px; }
+  button {
+    font-family:inherit; font-size:14px; font-weight:700; color:#fff; cursor:pointer;
+    padding:11px 22px; border:none; border-radius:12px; background:linear-gradient(135deg,var(--indigo),var(--violet));
+    box-shadow:0 8px 20px rgba(79,70,229,0.4);
+  }
+  small { display:block; margin-top:14px; color:var(--ink-soft); font-size:12px; opacity:.85; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px">
+        <path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
+    <h1>Tidak Ada Koneksi</h1>
+    <p>Perangkat Anda sedang offline. Data yang sudah terbuka tetap bisa dilihat, dan pengajuan akan bisa dikirim setelah koneksi kembali.</p>
+    <button onclick="location.reload()">Coba Lagi</button>
+    <small>Sistem Inventaris Pesantren SahabatQu</small>
+  </div>
+</body>
+</html>

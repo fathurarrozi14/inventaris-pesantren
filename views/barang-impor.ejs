@@ -1,0 +1,96 @@
+<%- include('partials/head', { page: 'barang' }) %>
+
+<div class="toolbar">
+  <a class="btn btn-ghost" href="<%- url('barang') %>">← Kembali ke Inventaris</a>
+  <span class="tb-info">Impor data barang dari file Excel — kategori &amp; pengkodean aset terisi otomatis.</span>
+</div>
+
+<div class="card form-card">
+  <div class="card-head">
+    <h2>1. Pilih File Excel</h2>
+    <span class="cell-sub">Format kolom: <strong>Nama Barang | Seri | Kategori | Kode Aset | Lokasi | Stok</strong></span>
+  </div>
+  <form method="post" action="<%- url('barang/impor') %>" enctype="multipart/form-data" class="form-grid">
+    <%- csrfField %>
+    <div class="field field-wide">
+      <label>File Excel (.xlsx / .xls) <i>*</i></label>
+      <input type="file" name="file" accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+      <p class="hint">
+        Baris pertama boleh berupa judul kolom (akan dilewati otomatis). Kolom <strong>Stok</strong> berisi angka
+        (jumlah total = jumlah tersedia). Kategori &amp; kode aset akan <strong>dideteksi otomatis</strong> dari nama barang
+        dan lokasi — Anda masih bisa memperbaikinya sebelum disimpan.
+      </p>
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn">📥 Baca File &amp; Deteksi Otomatis</button>
+    </div>
+  </form>
+</div>
+
+<% if (hasil) { %>
+<div class="card">
+  <div class="card-head">
+    <h2>2. Periksa Hasil Deteksi (<%= hasil.length %> baris)</h2>
+    <span class="cell-sub">File: <%= e(namaFile || '') %> — kolom Kategori &amp; Kode Aset sudah terisi otomatis, silakan ubah bila perlu lalu klik Impor.</span>
+  </div>
+  <form method="post" action="<%- url('barang/impor/simpan') %>">
+    <%- csrfField %>
+    <% if (hasil.length === 0) { %>
+    <p class="empty">Tidak ada baris data terbaca. Pastikan kolom pertama berisi nama barang.</p>
+    <% } else { %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">Pilih</th>
+            <th>Nama Barang</th>
+            <th style="width:130px">Seri</th>
+            <th style="width:190px">Kategori (otomatis)</th>
+            <th style="width:210px">Kode Aset (otomatis)</th>
+            <th style="width:150px">Lokasi</th>
+            <th style="width:90px">Stok</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% hasil.forEach((h, i) => { %>
+          <tr>
+            <td><input type="checkbox" name="pilih" value="1" checked></td>
+            <td>
+              <div class="cell-main"><%= h.nama %></div>
+              <input type="hidden" name="nama" value="<%- e(h.nama) %>">
+              <input type="hidden" name="golongan" value="<%- e(h.golongan) %>">
+              <input type="hidden" name="bidang_aset" value="<%- e(h.bidang_aset) %>">
+              <% if (h.kategoriFile && h.kategoriFile !== h.kategori) { %>
+              <div class="cell-sub">Kategori di file: <%= h.kategoriFile %></div>
+              <% } %>
+            </td>
+            <td><input type="text" name="seri" value="<%- e(h.seri) %>" placeholder="—"></td>
+            <td>
+              <input type="text" name="kategori" list="daftarKategoriImpor" value="<%- e(h.kategori) %>">
+            </td>
+            <td>
+              <input type="text" name="kode_aset" value="<%- e(h.kode_aset) %>" placeholder="—">
+              <% if (h.kode_aset && h.kode_aset !== h.kode_deteksi) { %>
+              <div class="cell-sub">deteksi: <%= h.kode_deteksi || '—' %></div>
+              <% } %>
+            </td>
+            <td><input type="text" name="lokasi" value="<%- e(h.lokasi) %>"></td>
+            <td><input type="number" name="stok" min="0" value="<%= h.stok %>"></td>
+          </tr>
+          <% }) %>
+          <datalist id="daftarKategoriImpor">
+            <% (kategories || []).forEach(k => { %><option value="<%- k %>"><% }) %>
+          </datalist>
+        </tbody>
+      </table>
+    </div>
+    <div class="form-actions" style="margin-top:14px">
+      <button type="submit" class="btn">💾 Impor Barang Terpilih</button>
+      <a class="btn btn-ghost" href="<%- url('barang/impor') %>">Batal</a>
+    </div>
+    <% } %>
+  </form>
+</div>
+<% } %>
+
+<%- include('partials/foot') %>

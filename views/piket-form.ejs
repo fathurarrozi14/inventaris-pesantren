@@ -1,0 +1,52 @@
+<%- include('partials/head', { page: 'piket' }) %>
+
+<div class="toolbar">
+  <a class="btn btn-ghost" href="<%- url('piket') %>">← Kembali ke Arsip</a>
+</div>
+
+<div class="card form-card">
+  <div class="card-head">
+    <h2><%= piket ? 'Ubah Jadwal Piket — ' + e(bulanLabel) : 'Tambah Jadwal Piket Bulanan' %></h2>
+    <% if (piket) { %><a class="link-more" href="<%- url('piket/' + piket.id) %>">Lihat hasil</a><% } %>
+  </div>
+  <form method="post" action="<%- url(piket ? 'piket/' + piket.id : 'piket') %>" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Bulan / Tahun <i>*</i></label>
+      <input type="month" name="bulan" required value="<%- piket ? e(piket.bulan) : e(blnSekarang) %>">
+    </div>
+    <div class="field">
+      <label>Judul <i>*</i></label>
+      <input type="text" name="judul" required value="<%- piket ? e(piket.judul) : 'Jadwal Piket Bulanan Cleaning Service' %>">
+    </div>
+    <div class="field field-wide">
+      <label>Keterangan</label>
+      <input type="text" name="keterangan" value="<%- piket ? e(piket.keterangan) : '' %>" placeholder="cth: Jadwal kebersihan harian area pesantren">
+    </div>
+    <div class="field field-wide">
+      <label>Isi Jadwal Harian <i>*</i> — checklist harian (Senin s.d. Ahad)</label>
+      <div class="piket-grid">
+        <div class="piket-row piket-head">
+          <span class="piket-hari">Hari</span>
+          <span>Petugas</span>
+          <span>Area / Lokasi</span>
+          <span class="piket-done-label">Selesai</span>
+        </div>
+        <% baris.forEach((b, i) => { %>
+        <div class="piket-row">
+          <span class="piket-hari"><%= b.hari %></span>
+          <input type="text" name="petugas[]" placeholder="Nama petugas" value="<%- b.petugas ? e(b.petugas) : '' %>">
+          <input type="text" name="area[]" placeholder="Area yang dibersihkan" value="<%- b.area ? e(b.area) : '' %>">
+          <label class="piket-done"><input type="checkbox" name="selesai[]" value="1" <%- b.done ? 'checked' : '' %>> ✓</label>
+        </div>
+        <% }) %>
+      </div>
+      <p class="hint">Isi petugas &amp; area untuk setiap hari (kosongkan bila libur). Centang "✓" pada hari yang sudah dikerjakan — tampil sebagai checklist harian saat dicetak.</p>
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" class="btn"><%= piket ? 'Simpan Perubahan' : 'Simpan Jadwal' %></button>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

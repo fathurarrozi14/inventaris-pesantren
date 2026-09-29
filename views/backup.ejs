@@ -1,0 +1,31 @@
+<%- include('partials/head', { page: 'backup' }) %>
+
+<div class="detail-grid">
+  <div class="card detail-main">
+    <div class="card-head"><h2>💾 Backup Database</h2></div>
+    <p class="detail-desc">
+      Unduh seluruh data aplikasi (inventaris, peminjaman, maintenance, arsip surat, pengaturan website, akun pengguna)
+      dalam satu file <strong>ZIP</strong>. Simpan file tersebut di tempat aman.
+    </p>
+    <a class="btn" href="<%- url('backup/download') %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download Backup (ZIP)
+    </a>
+    <p class="hint mt">File: <em>backup-sahabatqu-YYYYMMDD.zip</em> berisi data.sqlite + keterangan.</p>
+  </div>
+
+  <div class="card detail-side">
+    <div class="card-head"><h2>♻️ Restore dari Backup</h2></div>
+    <form method="post" action="<%- url('backup/restore') %>" enctype="multipart/form-data" class="stack-form" data-confirm="Restore akan mengganti seluruh data saat ini dengan isi file backup. Lanjutkan?">
+      <%- csrfField %>
+      <div class="field">
+        <label>File Backup (ZIP)</label>
+        <input type="file" name="file" accept=".zip,application/zip" required>
+      </div>
+      <button type="submit" class="btn btn-block">Restore Data</button>
+      <p class="hint">⚠️ Data lama otomatis dicadangkan (<em>.bak-tanggal</em>) sebelum diganti. Perubahan penuh berlaku setelah aplikasi dimuat ulang.</p>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

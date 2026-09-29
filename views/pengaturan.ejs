@@ -1,0 +1,22 @@
+<%- include('partials/head', { page: 'pengaturan' }) %>
+
+<form method="post" action="pengaturan-website">
+  <%- csrfField %>
+  <div class="card form-card">
+    <div class="card-head"><h2>Pengaturan Umum</h2></div>
+    <div class="form-grid">
+      <div class="field field-wide">
+        <label>URL Website (dipakai untuk QR/barcode stiker)</label>
+        <input type="text" name="url_website" value="<%- e(set.url_website) %>" placeholder="https://...">
+        <p class="hint">Alamat publik website. Saat barcode/QR stiker di-scan, pengunjung diarahkan ke alamat ini + /barang/[id] (stiker barang) atau /ruangan/[id] (stiker ruangan).</p>
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:8px">
+      <button type="submit" class="btn">Simpan Pengaturan</button>
+    </div>
+  </div>
+</form>
+
+<p class="hint">Pengaturan lain (logo, kontak, judul seksi website) ada di menu <a class="link-more" href="<%- url('pengaturan-website') %>">Halaman Website</a> dan <a class="link-more" href="<%- url('website-profil') %>">Website Profil</a>.</p>
+
+<%- include('partials/foot') %>

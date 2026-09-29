@@ -1,0 +1,136 @@
+<%- include('partials/head', { page: 'laporan' }) %>
+
+<div class="toolbar no-print">
+  <a class="btn btn-ghost" href="<%- url('laporan') %>">← Kembali ke Laporan</a>
+  <a class="btn btn-ghost" href="<%- url('laporan/inventaris/excel') %>">⬇ Download Excel</a>
+  <button type="button" class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Cetak / Simpan PDF
+  </button>
+  <a class="btn btn-ghost" href="<%- url('laporan/inventaris/excel') %>">⬇ Download Excel</a>
+</div>
+
+<div class="print-header">
+  <% if (logoData) { %>
+  <img class="ph-logo ph-logo-img" src="<%- logoData %>" alt="Logo">
+  <% } else { %>
+  <svg class="ph-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path fill="#6366F1" d="M24 5C17 11 13 16 13 22c0 7 5 11 11 11s11-4 11-11c0-6-4-11-11-17z"/>
+    <rect x="8" y="33" width="32" height="4" rx="2" fill="#8B5CF6"/>
+    <rect x="4" y="38" width="40" height="5" rx="2.5" fill="#6366F1"/>
+    <rect x="6" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+    <rect x="39" y="24" width="3" height="12" rx="1.5" fill="#E8C46A"/>
+  </svg>
+  <% } %>
+  <div class="ph-text">
+    <h2>PESANTREN SAHABATQU</h2>
+    <p>Sistem Inventaris, Peminjaman &amp; Pemeliharaan</p>
+    <h3>Laporan Inventaris Barang &amp; Ruangan</h3>
+    <span class="ph-date">Per <%= fmtDate(today()) %> · Dicetak <%= fmtDate(today()) %> oleh <%= u.nama %> (<%= roleLabel(u.role) %>)</span>
+  </div>
+</div>
+
+<div class="stat-grid report-summary">
+  <div class="card stat">
+    <div class="stat-icon si-indigo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Jenis Barang</span><strong class="stat-value"><%= sum.jenis %></strong></div>
+  </div>
+  <div class="card stat">
+    <div class="stat-icon si-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8"/><path d="M3.29 7L12 2l8.71 5"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Total Stok</span><strong class="stat-value"><%= sum.total.toLocaleString('id-ID') %></strong></div>
+  </div>
+  <div class="card stat">
+    <div class="stat-icon si-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Stok Tersedia</span><strong class="stat-value"><%= sum.tersedia.toLocaleString('id-ID') %></strong></div>
+  </div>
+  <div class="card stat">
+    <div class="stat-icon si-violet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+    </div>
+    <div class="stat-info"><span class="stat-label">Sedang Dipinjam</span><strong class="stat-value"><%= (sum.total - sum.tersedia).toLocaleString('id-ID') %></strong></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Daftar Barang</h2>
+    <span class="cell-sub"><%= sum.jenis %> jenis · <%= sum.total.toLocaleString('id-ID') %> unit total</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>No</th><th>Nama Barang</th><th>Kategori</th><th>Lokasi</th><th>Stok Tersedia</th><th>Total</th><th>Satuan</th></tr>
+      </thead>
+      <tbody>
+        <% if (items.length === 0) { %>
+        <tr><td colspan="7" class="empty-cell">Belum ada data barang.</td></tr>
+        <% } %>
+        <% items.forEach((b, i) => { %>
+        <tr>
+          <td><%= i + 1 %></td>
+          <td>
+            <div class="cell-main"><%= b.nama %></div>
+            <% if (b.deskripsi) { %><div class="cell-sub"><%= b.deskripsi %></div><% } %>
+          </td>
+          <td><%= b.kategori || '—' %></td>
+          <td><%= b.lokasi || '—' %></td>
+          <td><strong><%= b.jumlah_tersedia %></strong></td>
+          <td><%= b.jumlah_total %></td>
+          <td><%= b.satuan %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Daftar Ruangan</h2>
+    <span class="cell-sub"><%= sum.ruangan %> ruangan</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>No</th><th>Ruangan</th><th>Lokasi</th><th>Kapasitas</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <% if (rooms.length === 0) { %>
+        <tr><td colspan="5" class="empty-cell">Belum ada data ruangan.</td></tr>
+        <% } %>
+        <% rooms.forEach((r, i) => { %>
+        <tr>
+          <td><%= i + 1 %></td>
+          <td>
+            <div class="cell-main"><%= r.nama %></div>
+            <% if (r.deskripsi) { %><div class="cell-sub"><%= r.deskripsi %></div><% } %>
+          </td>
+          <td><%= r.lokasi || '—' %></td>
+          <td><%= r.kapasitas %> orang</td>
+          <td><%- badge(r.status, 'ruangan') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="signature print-only">
+  <div class="sig-block">
+    <p class="sig-role">Dicetak oleh,</p>
+    <p class="sig-name"><strong><%= u.nama %></strong></p>
+    <p class="sig-sub"><%= roleLabel(u.role) %> · Pesantren SahabatQu</p>
+  </div>
+  <div class="sig-block">
+    <p class="sig-role">Mengetahui,<br>Kepala Sarana &amp; Prasarana</p>
+    <p class="sig-name">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</p>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

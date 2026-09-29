@@ -1,0 +1,167 @@
+<%- include('partials/head', { page: 'peminjaman-barang' }) %>
+
+<% const TABS = [['', 'Semua'], ['pending', 'Menunggu'], ['disetujui', 'Dipinjam'], ['ditolak', 'Ditolak'], ['dikembalikan', 'Dikembalikan'], ['dibatalkan', 'Dibatalkan']]; %>
+<div class="toolbar">
+  <form method="get" action="peminjaman-barang" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari barang / keperluan / peminjam / telp...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <div class="tabs">
+    <% TABS.forEach(([val, label]) => { %>
+    <a class="<%- filter === val ? 'active' : '' %>" href="peminjaman-barang<%- val ? '?status=' + val : '' %>"><%= label %></a>
+    <% }) %>
+  </div>
+</div>
+
+<div class="card form-card">
+  <div class="card-head">
+    <h2>Ajukan Peminjaman Barang</h2>
+  </div>
+  <form method="post" action="peminjaman-barang" class="form-grid">
+    <%- csrfField %>
+    <div class="field">
+      <label>Barang <i>*</i></label>
+      <select name="barang_id" required id="barangSelect" onchange="toggleBarangBaru()">
+        <option value="">— Pilih Barang —</option>
+        <% items.forEach(b => { %>
+        <option value="<%= b.id %>" <%- preselect === b.id ? 'selected' : '' %>><%= b.nama %> (tersedia <%= b.jumlah_tersedia %> <%= b.satuan %>)</option>
+        <% }) %>
+        <% if (isManageStaff) { %><option value="0">＋ Tambah Barang Baru...</option><% } %>
+      </select>
+      <% if (isManageStaff) { %>
+      <div class="ruangan-baru" id="barangBaruBox" style="display:none;margin-top:8px">
+        <input type="text" name="nama_barang_baru" id="namaBarangBaru" placeholder="Nama barang baru (cth: Speaker Portable)" style="margin-bottom:6px">
+        <div class="dt-row">
+          <input type="text" name="kategori_barang_baru" placeholder="Kategori" style="margin-bottom:6px">
+          <input type="text" name="satuan_barang_baru" placeholder="Satuan (unit)" style="margin-bottom:6px">
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <div class="field">
+      <label>Jumlah <i>*</i></label>
+      <input type="number" name="jumlah" min="1" value="1" required>
+    </div>
+    <div class="field">
+      <label>Keperluan <i>*</i></label>
+      <input type="text" name="keperluan" required placeholder="cth: Kegiatan pesantren kilat">
+    </div>
+    <div class="field">
+      <label>Nama Peminjam <i>*</i></label>
+      <input type="text" name="nama_peminjam" required placeholder="cth: Ustadz Ahmad" value="<%- e(u.nama) %>">
+    </div>
+    <div class="field">
+      <label>Nomor Telepon / WhatsApp <i>*</i></label>
+      <input type="text" name="nomor_peminjam" required placeholder="cth: 0856 4183 8302">
+    </div>
+    <div class="field">
+      <label>Pinjam — Tanggal &amp; Jam <i>*</i></label>
+      <div class="dt-row">
+        <input type="date" name="tanggal_pinjam" required value="<%- today() %>">
+        <input type="time" name="jam_mulai" required value="08:00">
+      </div>
+    </div>
+    <div class="field">
+      <label>Kembali — Tanggal &amp; Jam <i>*</i></label>
+      <div class="dt-row">
+        <input type="date" name="tanggal_kembali" required value="<%- today() %>">
+        <input type="time" name="jam_selesai" required value="17:00">
+      </div>
+    </div>
+    <div class="field field-wide">
+      <label>Catatan (opsional)</label>
+      <input type="text" name="catatan" placeholder="Keterangan tambahan untuk petugas">
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="ajukan" class="btn">Kirim Pengajuan</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Barang</th>
+          <th>Peminjam</th>
+          <th>No. Telepon/WA</th>
+          <th>Jumlah</th>
+          <th>Tanggal Pinjam → Kembali</th>
+          <th>Status</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="7" class="empty-cell">Tidak ada data pada filter ini.</td></tr>
+        <% } %>
+        <% list.forEach(r => { %>
+        <tr>
+          <td>
+            <div class="cell-main"><%= r.barang_nama %></div>
+            <% if (r.catatan) { %><div class="cell-sub">Catatan: <%= r.catatan %></div><% } %>
+          </td>
+          <td>
+            <div class="cell-main"><%= r.nama_peminjam || r.peminjam_nama %></div>
+            <div class="cell-sub">@<%= r.peminjam_username %></div>
+          </td>
+          <td><%= r.nomor_peminjam || '—' %></td>
+          <td><strong><%= r.jumlah %></strong> <%= r.satuan %></td>
+          <td class="nowrap">
+            <%= fmtDateShort(r.tanggal_pinjam) %> – <%= fmtDateShort(r.tanggal_kembali) %>
+            <br><span class="cell-sub"><%= r.jam_mulai || '08:00' %> – <%= r.jam_selesai || '17:00' %> WIB</span>
+          </td>
+          <td><%- badge(r.status, 'barang') %></td>
+          <td class="table-actions">
+            <% if (r.status === 'pending' && isManageStaff) { %>
+              <form method="post" action="peminjaman-barang" class="inline-form">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="setujui" class="btn btn-sm">Setujui</button>
+              </form>
+              <form method="post" action="peminjaman-barang" class="inline-form reject-form">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <input type="text" name="catatan" placeholder="Alasan (opsional)" class="input-mini">
+                <button type="submit" name="_aksi" value="tolak" class="btn btn-sm btn-danger">Tolak</button>
+              </form>
+            <% } else if (r.status === 'pending' && u.id === r.peminjam_id) { %>
+              <form method="post" action="peminjaman-barang" class="inline-form" data-confirm="Batalkan pengajuan ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="batalkan" class="btn btn-sm btn-ghost">Batalkan</button>
+              </form>
+            <% } else if (r.status === 'disetujui' && isManageStaff) { %>
+              <form method="post" action="peminjaman-barang" class="inline-form" data-confirm="Tandai barang telah dikembalikan? Stok akan kembali.">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="kembalikan" class="btn btn-sm">Dikembalikan</button>
+              </form>
+            <% } else { %>
+              <span class="cell-sub">—</span>
+            <% } %>
+            <% if (isAdmin) { %>
+              <form method="post" action="peminjaman-barang" class="inline-form" data-confirm="Hapus data peminjaman ini?">
+                <%- csrfField %><input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>
+<script>
+window.toggleBarangBaru = function () {
+  var sel = document.getElementById('barangSelect');
+  var box = document.getElementById('barangBaruBox');
+  var inp = document.getElementById('namaBarangBaru');
+  if (!sel || !box) return;
+  var show = sel.value === '0';
+  box.style.display = show ? 'block' : 'none';
+  if (inp) inp.required = show;
+};
+</script>

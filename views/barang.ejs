@@ -1,0 +1,284 @@
+<%- include('partials/head', { page: 'barang' }) %>
+
+<div class="toolbar">
+  <form method="get" action="barang" class="search-box">
+    <input type="search" name="q" value="<%- e(q || '') %>" placeholder="Cari nama / kategori barang...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <% if (isManageStaff) { %>
+  <button class="btn btn-ghost" id="toggleForm" type="button" data-add-label="+ Tambah Barang"><%= edit ? 'Tutup Formulir' : '+ Tambah Barang' %></button>
+  <a class="btn btn-ghost" href="<%- url('barang/impor') %>" title="Impor data barang dari file Excel">📥 Impor Excel</a>
+  <% } %>
+  <% if (isAdmin) { %>
+  <details class="add-details kat-add" style="margin-left:auto">
+    <summary>+ Tambah Kategori</summary>
+    <form method="post" action="<%- url('barang/kategori') %>" class="kat-add-form">
+      <%- csrfField %>
+      <input type="text" name="nama" list="daftarKategoriAdd" placeholder="Nama kategori baru..." required>
+      <datalist id="daftarKategoriAdd">
+        <% (kategories || []).forEach(k => { %><option value="<%- k %>"><% }) %>
+      </datalist>
+      <button type="submit" class="btn btn-sm">Simpan</button>
+    </form>
+  </details>
+  <% } %>
+</div>
+
+<% if (breakdown.length) { %>
+<div class="card" style="padding:16px 20px">
+  <div class="card-head" style="margin-bottom:10px"><h2>Statistik Inventaris per Kategori</h2><span class="cell-sub">pilih kategori untuk memfilter daftar barang</span></div>
+  <select class="breakdown-select" id="breakdownSelect"
+    onchange="if (this.value) location.href = '<%- url('barang') %>?kategori=' + encodeURIComponent(this.value); else location.href = '<%- url('barang') %>';">
+    <option value="">— Semua Kategori —</option>
+    <% breakdown.forEach(b => { %>
+    <option value="<%- b.kategori %>" <%- kat === b.kategori ? 'selected' : '' %>><%= b.kategori %> · <%= b.jenis %> jenis · <%= b.total.toLocaleString('id-ID') %> total · <%= b.tersedia.toLocaleString('id-ID') %> tersedia</option>
+    <% }) %>
+  </select>
+</div>
+<% } %>
+
+<script>
+window.PENGKODEAN = <%- JSON.stringify(pengkodean) %>;
+</script>
+
+<% if (isManageStaff) { %>
+<div class="card form-card" id="barangForm" <% if (!edit) { %>hidden<% } %>>
+  <div class="card-head">
+    <h2><%= edit ? 'Ubah Barang' : 'Tambah Barang Baru' %></h2>
+    <% if (edit) { %><a class="link-more" href="barang">Batal ubah</a><% } %>
+  </div>
+  <form method="post" action="barang" class="form-grid pk-form" data-kode-saatini="<%- edit ? e(edit.kode_aset) : '' %>">
+    <%- csrfField %>
+    <input type="hidden" name="id" value="<%- edit ? edit.id : '' %>">
+    <div class="field">
+      <label>Nama Barang <i>*</i></label>
+      <input type="text" name="nama" required value="<%- edit ? edit.nama : '' %>" placeholder="cth: Proyektor">
+    </div>
+    <div class="field">
+      <label>Lokasi</label>
+      <input type="text" name="lokasi" value="<%- edit ? edit.lokasi : '' %>" placeholder="cth: Gudang Sarpras">
+    </div>
+    <div class="field">
+      <label>Jumlah Total</label>
+      <input type="number" name="jumlah_total" id="barangJumlahTotal" min="0" value="<%- edit ? edit.jumlah_total : '' %>" placeholder="cth: 5">
+    </div>
+    <div class="field">
+      <label>Jumlah Tersedia</label>
+      <input type="number" name="jumlah_tersedia" id="barangJumlahTersedia" min="0" value="<%- edit ? edit.jumlah_tersedia : '' %>" placeholder="otomatis mengikuti total">
+      <p class="hint">Otomatis menyesuaikan saat Jumlah Total diubah.</p>
+    </div>
+    <div class="field">
+      <label>Golongan</label>
+      <select name="golongan" id="barangGolongan" data-golongan>
+        <option value="">— Pilih —</option>
+        <% pengkodean.golongan.forEach(g => { %>
+        <option value="<%= g.kode %> <%= g.nama %>" <%- edit && edit.golongan === g.kode + ' ' + g.nama ? 'selected' : '' %>><%= g.kode %> <%= g.nama %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Bidang</label>
+      <select name="bidang_aset" id="barangBidang" data-bidang>
+        <option value="">— Pilih —</option>
+        <% pengkodean.bidang.forEach(b => { %>
+        <option value="<%= b.kode %> <%= b.nama %>" <%- edit && edit.bidang_aset === b.kode + ' ' + b.nama ? 'selected' : '' %>><%= b.kode %> <%= b.nama %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Sub / Kode</label>
+      <select name="kode_aset" id="barangKode" data-kode>
+        <option value="">— Pilih Bidang dulu —</option>
+      </select>
+      <p class="hint" data-preview></p>
+    </div>
+    <div class="field field-wide">
+      <label>Kode Stiker (otomatis dari kode aset)</label>
+      <div class="pk-stiker-preview" data-stiker-preview>— isi Golongan, Bidang &amp; Sub —</div>
+      <p class="hint">Kode ini otomatis tercetak di stiker barang: Golongan+Bidang+Sub Nama BulanTahun No.Urut.</p>
+    </div>
+    <div class="field">
+      <label>Kategori</label>
+      <input type="text" name="kategori" list="daftarKategoriBarang" value="<%- edit ? edit.kategori : '' %>" placeholder="cth: Elektronik">
+      <datalist id="daftarKategoriBarang">
+        <% kategories.forEach(k => { %><option value="<%- k %>"><% }) %>
+        <option value="＋ Kategori Baru (ketik langsung)">
+      </datalist>
+    </div>
+    <div class="field">
+      <label>Satuan</label>
+      <input type="text" name="satuan" value="<%- edit ? edit.satuan : 'unit' %>" placeholder="unit / set / lembar">
+    </div>
+    <div class="field">
+      <label>Seri Barang / SN</label>
+      <input type="text" name="seri" value="<%- edit ? edit.seri : '' %>" placeholder="cth: SN-2026-001 (opsional)">
+    </div>
+    <div class="field">
+      <label>Tanggal <i>(pilih dari kalender)</i></label>
+      <input type="date" name="tgl_update" id="barangTgl" value="<%- edit && edit.tgl_update ? edit.tgl_update : today() %>">
+    </div>
+    <div class="field">
+      <label>Jam</label>
+      <input type="time" name="jam_update" id="barangJam" value="<%- edit && edit.jam_update ? edit.jam_update : '' %>">
+    </div>
+    <div class="field field-wide">
+      <label>Deskripsi</label>
+      <input type="text" name="deskripsi" value="<%- edit ? edit.deskripsi : '' %>" placeholder="Deskripsi singkat barang">
+    </div>
+    <div class="field field-wide">
+      <label>Foto Barang (untuk stiker/scan barcode)</label>
+      <div class="foto-upload">
+        <div class="foto-preview" id="barangFotoPreview">
+          <% if (edit && edit.foto) { %><img src="<%- e(edit.foto) %>" alt="Foto"><% } else { %><span class="foto-empty">Belum ada foto</span><% } %>
+        </div>
+        <div class="foto-controls">
+          <label class="btn btn-ghost btn-sm" for="barangFotoFile">Pilih Foto…</label>
+          <input type="file" id="barangFotoFile" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+          <input type="hidden" name="foto" id="barangFoto" value="<%- edit && edit.foto ? e(edit.foto) : '' %>">
+          <p class="hint">PNG/JPG/GIF/WebP maks 1 MB. Tampil saat barcode/QR stiker di-scan.</p>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions field-wide">
+      <button type="submit" name="_aksi" value="simpan" class="btn"><%= edit ? 'Simpan Perubahan' : 'Simpan Barang' %></button>
+    </div>
+  </form>
+</div>
+<% } %>
+
+<script>
+(function () {
+  // Jumlah tersedia otomatis mengikuti jumlah total (saat edit) —
+  // mempertahankan selisih yang sedang dipinjam: tersediaBaru = tersediaAwal + (totalBaru - totalAwal)
+  var tTotal = document.getElementById('barangJumlahTotal');
+  var tTersedia = document.getElementById('barangJumlahTersedia');
+  if (tTotal && tTersedia) {
+    var awalTotal = parseInt(tTotal.value, 10) || 0;
+    var awalTersedia = parseInt(tTersedia.value, 10) || 0;
+    if (tTersedia.value === '') awalTersedia = awalTotal; // barang baru
+    tTotal.addEventListener('input', function () {
+      var baru = parseInt(tTotal.value, 10);
+      if (isNaN(baru) || baru < 0) baru = 0;
+      var tersedia = awalTersedia + (baru - awalTotal);
+      if (tersedia < 0) tersedia = 0;
+      if (tersedia > baru) tersedia = baru;
+      tTersedia.value = tersedia;
+    });
+  }
+  // Tanggal & jam otomatis terisi (saat halaman dibuka / edit)
+  var bt = document.getElementById('barangTgl');
+  var bj = document.getElementById('barangJam');
+  if (bt && bj) {
+    var now = new Date();
+    bt.value = now.toISOString().slice(0, 10);
+    bj.value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  }
+  var file = document.getElementById('barangFotoFile');
+  var hidden = document.getElementById('barangFoto');
+  var prev = document.getElementById('barangFotoPreview');
+  if (!file || !hidden) return;
+  file.addEventListener('change', function () {
+    var f = file.files && file.files[0];
+    if (!f) return;
+    if (!/^image\/(png|jpe?g|gif|webp)$/i.test(f.type)) { alert('File harus gambar (PNG/JPG/GIF/WebP).'); file.value = ''; return; }
+    if (f.size > 1 * 1024 * 1024) { alert('Ukuran foto maksimal 1 MB.'); file.value = ''; return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      hidden.value = rd.result;
+      prev.innerHTML = '<img src="' + rd.result + '" alt="Foto">';
+    };
+    rd.readAsDataURL(f);
+  });
+})();
+// Upload foto dari tombol aksi di tabel barang
+window.uploadBarangFoto = function (id, input) {
+  var f = input.files && input.files[0];
+  if (!f) return;
+  if (!/^image\/(png|jpe?g|gif|webp)$/i.test(f.type)) { alert('File harus gambar (PNG/JPG/GIF/WebP).'); input.value = ''; return; }
+  if (f.size > 1 * 1024 * 1024) { alert('Ukuran foto maksimal 1 MB.'); input.value = ''; return; }
+  var rd = new FileReader();
+  rd.onload = function () {
+    var body = new URLSearchParams();
+    body.append('_csrf', '<%- csrfToken %>');
+    body.append('foto', rd.result);
+    fetch('barang/' + id + '/foto', { method: 'POST', body: body })
+      .then(function (r) { if (r.ok || r.redirected) { alert('Foto tersimpan!'); location.reload(); } else alert('Gagal menyimpan foto.'); })
+      .catch(function () { alert('Gagal menyimpan foto.'); });
+  };
+  rd.readAsDataURL(f);
+};
+</script>
+
+<%- include('partials/pengkodean-card') %>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Barang</th>
+          <th>Seri</th>
+          <th>Kategori</th>
+          <th>Kode Aset</th>
+          <th>Lokasi</th>
+          <th>Stok</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="7" class="empty-cell">Belum ada data barang.</td></tr>
+        <% } %>
+        <% list.forEach(b => { %>
+        <% const pct = b.jumlah_total > 0 ? Math.round(b.jumlah_tersedia / b.jumlah_total * 100) : 0; %>
+        <tr>
+          <td>
+            <div class="cell-main-wrap">
+              <% if (b.foto) { %><img class="barang-thumb" src="<%- e(b.foto) %>" alt=""><% } %>
+              <div>
+                <div class="cell-main"><%= b.nama %></div>
+                <% if (b.deskripsi) { %><div class="cell-sub"><%= b.deskripsi %></div><% } %>
+              </div>
+            </div>
+          </td>
+          <td><%= b.seri || '—' %></td>
+          <td><%= b.kategori || '—' %></td>
+          <td>
+            <% if (b.kode_aset) { %>
+            <span class="kode-chip"><%= kodeAset(b.golongan, b.bidang_aset, b.kode_aset) %></span>
+            <div class="cell-sub"><%= subNama(b.kode_aset) %></div>
+            <% } else { %>—<% } %>
+          </td>
+          <td><%= b.lokasi || '—' %></td>
+          <td>
+            <div class="stock">
+              <span class="stock-num"><%= b.jumlah_tersedia %> / <%= b.jumlah_total %> <em><%= b.satuan %></em></span>
+              <div class="bar"><div class="bar-fill <%= pct === 0 ? 'low' : (pct <= 25 ? 'warn' : '') %>" style="width:<%= pct %>%"></div></div>
+            </div>
+          </td>
+          <td class="table-actions">
+            <a class="btn btn-sm btn-ghost" href="<%- url('peminjaman-barang') %>?barang_id=<%= b.id %>">Pinjam</a>
+            <% if (isManageStaff) { %>
+            <a class="btn btn-sm btn-ghost" href="barang?edit=<%= b.id %>">Edit</a>
+            <label class="btn btn-sm btn-ghost" for="bFotoInput<%= b.id %>" style="cursor:pointer"><%= b.foto ? 'Ganti Foto' : 'Upload Foto' %></label>
+            <input type="file" id="bFotoInput<%= b.id %>" accept="image/png,image/jpeg,image/gif,image/webp" hidden
+              onchange="uploadBarangFoto(<%= b.id %>, this)">
+            <% } %>
+            <% if (isAdmin) { %>
+            <form method="post" action="barang" class="inline-form" data-confirm="Hapus barang <%= b.nama %>?">
+              <%- csrfField %>
+              <input type="hidden" name="id" value="<%= b.id %>">
+              <button type="submit" name="_aksi" value="hapus" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

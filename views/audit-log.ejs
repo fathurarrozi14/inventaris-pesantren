@@ -1,0 +1,66 @@
+<%- include('partials/head', { page: 'audit-log' }) %>
+
+<div class="toolbar">
+  <form method="get" action="audit-log" class="search-box">
+    <input type="search" name="q" value="<%- e(q) %>" placeholder="Cari username / nama / browser...">
+    <button type="submit" aria-label="Cari">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </form>
+  <div class="table-actions">
+    <span class="tb-info">Tamu website hari ini: <strong><%= stat.kunjunganHariIni %></strong> · total: <strong><%= stat.kunjunganTotal %></strong></span>
+    <form method="post" action="<%- url('audit-log/hapus-kunjungan') %>" data-confirm="Hapus semua catatan kunjungan tamu website?">
+      <%- csrfField %>
+      <button type="submit" class="btn btn-sm btn-danger">Hapus Catatan Kunjungan</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Pengguna</th>
+          <th>Aksi</th>
+          <th>Perangkat</th>
+          <th>Browser · OS</th>
+          <th>IP</th>
+          <th class="th-actions">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (list.length === 0) { %>
+        <tr><td colspan="7" class="empty-cell">Belum ada catatan aktivitas.</td></tr>
+        <% } %>
+        <% list.forEach(a => { %>
+        <tr>
+          <td class="nowrap"><%= fmtDate(a.waktu.slice(0, 10)) %><br><span class="cell-sub"><%= a.waktu.slice(11, 16) %> WIB</span></td>
+          <td>
+            <div class="cell-main"><%= a.nama || a.username || '—' %></div>
+            <div class="cell-sub">@<%= a.username || '—' %><% if (a.role) { %> · <%= roleLabel(a.role) %><% } %></div>
+          </td>
+          <td>
+            <span class="lvl lvl-<%= a.aksi === 'login' ? 'ringan' : (a.aksi === 'logout' ? 'sedang' : (a.aksi === 'kunjungan' ? 'cyan' : 'berat')) %>"><%= a.aksi %></span>
+          </td>
+          <td>
+            <div class="cell-main"><%= a.device %></div>
+            <div class="cell-sub">📱 bila HP</div>
+          </td>
+          <td><%= a.browser %> · <%= a.os %></td>
+          <td class="nowrap"><%= a.ip || '—' %></td>
+          <td class="table-actions">
+            <form method="post" action="<%- url('audit-log/' + a.id + '/hapus') %>" class="inline-form" data-confirm="Hapus catatan ini?">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

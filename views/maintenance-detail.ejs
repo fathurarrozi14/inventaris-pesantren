@@ -1,0 +1,149 @@
+<%- include('partials/head', { page: 'maintenance' }) %>
+
+<div class="detail-grid">
+  <div class="card detail-main">
+    <div class="card-head">
+      <h2><%= m.objek_nama %></h2>
+      <div class="head-badges">
+        <%- badge(m.status, 'maintenance') %>
+        <span class="lvl lvl-<%= m.tingkat %>"><%= m.tingkat %></span>
+      </div>
+    </div>
+    <h3 class="detail-title"><%= m.judul %></h3>
+    <% if (m.deskripsi) { %><p class="detail-desc"><%= m.deskripsi %></p><% } %>
+
+    <div class="timeline">
+      <div class="tl-step <%- m.status !== 'dilaporkan' ? 'done' : 'now' %>">
+        <span class="tl-dot"></span>
+        <div><strong>Dilaporkan</strong><small><%= fmtDate(m.tanggal_lapor) %></small></div>
+      </div>
+      <div class="tl-step <%- m.status === 'diperbaiki' ? 'now' : (m.status === 'selesai' ? 'done' : '') %>">
+        <span class="tl-dot"></span>
+        <div><strong>Sedang Diperbaiki</strong><small>proses pengerjaan</small></div>
+      </div>
+      <div class="tl-step <%- m.status === 'selesai' ? 'done' : '' %>">
+        <span class="tl-dot"></span>
+        <div><strong>Selesai</strong><small><%= m.tanggal_selesai ? fmtDate(m.tanggal_selesai) : 'belum selesai' %></small></div>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta"><span>Pelapor</span><strong><%= m.pelapor_nama %> <small>@<%= m.pelapor_username %></small></strong></div>
+      <div class="meta"><span>Sub Layanan</span><strong><span class="kat kat-<%= m.kategori %>"><%= kategoriLabel(m.kategori) %></span></strong></div>
+      <div class="meta"><span>Jenis Objek</span><strong><%= m.kategori === 'kendaraan' ? 'Kendaraan' : (m.objek_tipe === 'ruangan' ? 'Ruangan' : 'Barang') %></strong></div>
+      <div class="meta"><span>Penanggung Jawab</span><strong><%= m.penanggung_jawab || 'Belum ditunjuk' %></strong></div>
+      <div class="meta"><span>Estimasi Biaya</span><strong><%= fmtIDR(m.estimasi_biaya) %></strong></div>
+      <div class="meta"><span>Biaya Aktual</span><strong class="text-gold"><%= fmtIDR(m.biaya_aktual) %></strong></div>
+      <div class="meta"><span>Total Riwayat Perbaikan</span><strong><%= fmtIDR(totalBiaya) %></strong></div>
+    </div>
+  </div>
+
+  <% if (isManageStaff) { %>
+  <div class="card detail-side">
+    <div class="card-head"><h2>Kelola Pemeliharaan</h2></div>
+    <form method="post" action="" class="stack-form">
+      <%- csrfField %>
+      <div class="field">
+        <label>Status</label>
+        <select name="status">
+          <option value="dilaporkan" <%- m.status === 'dilaporkan' ? 'selected' : '' %>>Dilaporkan</option>
+          <option value="diperbaiki" <%- m.status === 'diperbaiki' ? 'selected' : '' %>>Sedang Diperbaiki</option>
+          <option value="selesai" <%- m.status === 'selesai' ? 'selected' : '' %>>Selesai</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Penanggung Jawab</label>
+        <input type="text" name="penanggung_jawab" value="<%- m.penanggung_jawab %>" placeholder="cth: H. Hasan (Sarpras)">
+      </div>
+      <div class="field">
+        <label>Estimasi Biaya (Rp)</label>
+        <input type="number" name="estimasi_biaya" min="0" value="<%- m.estimasi_biaya %>" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Biaya Aktual (Rp)</label>
+        <input type="number" name="biaya_aktual" min="0" value="<%- m.biaya_aktual %>" placeholder="0">
+      </div>
+      <% if (m.kategori === 'kendaraan') { %>
+      <div class="field">
+        <label>Jadwal Service Berikutnya</label>
+        <input type="date" name="service_selanjutnya" value="<%- m.service_selanjutnya %>">
+        <p class="hint">Pengingat otomatis muncul di dashboard (H-30 s.d. terlambat).</p>
+      </div>
+      <% } %>
+      <button type="submit" class="btn btn-block">Simpan Perubahan</button>
+      <p class="hint">Menandai status <em>Selesai</em> otomatis mencatat tanggal penyelesaian.</p>
+    </form>
+  </div>
+  <% } %>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Riwayat Perbaikan</h2>
+    <% if (isManageStaff) { %>
+    <details class="add-details">
+      <summary>+ Tambah Riwayat</summary>
+      <form method="post" action="<%- url('maintenance/' + m.id + '/riwayat') %>" class="form-grid mt">
+        <%- csrfField %>
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" name="tanggal" value="<%- today() %>">
+        </div>
+        <div class="field">
+          <label>Biaya (Rp)</label>
+          <input type="number" name="biaya" min="0" value="0">
+        </div>
+        <div class="field">
+          <label>Pelaksana</label>
+          <input type="text" name="pelaksana" placeholder="cth: Teknisi Acun">
+        </div>
+        <div class="field field-wide">
+          <label>Keterangan <i>*</i></label>
+          <input type="text" name="keterangan" required placeholder="cth: Penggantian kompresor AC">
+        </div>
+        <div class="form-actions field-wide">
+          <button type="submit" class="btn">Simpan Riwayat</button>
+        </div>
+      </form>
+    </details>
+    <% } %>
+  </div>
+
+  <% if (riwayat.length === 0) { %>
+    <p class="empty">Belum ada riwayat perbaikan untuk laporan ini.</p>
+  <% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Keterangan</th>
+          <th>Pelaksana</th>
+          <th>Biaya</th>
+          <% if (isManageStaff) { %><th class="th-actions">Aksi</th><% } %>
+        </tr>
+      </thead>
+      <tbody>
+        <% riwayat.forEach(r => { %>
+        <tr>
+          <td class="nowrap"><%= fmtDate(r.tanggal) %></td>
+          <td><%= r.keterangan %></td>
+          <td><%= r.pelaksana || '—' %></td>
+          <td class="nowrap"><strong><%= fmtIDR(r.biaya) %></strong></td>
+          <% if (isManageStaff) { %>
+          <td class="table-actions">
+            <form method="post" action="<%- url('maintenance/' + m.id + '/riwayat/' + r.id + '/hapus') %>" class="inline-form" data-confirm="Hapus riwayat ini?">
+              <%- csrfField %>
+              <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+            </form>
+          </td>
+          <% } %>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<%- include('partials/foot') %>
